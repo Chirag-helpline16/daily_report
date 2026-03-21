@@ -350,6 +350,16 @@ def render_call_notice_merge_page():
                         axis=1
                     )
                     
+                    # Step 6.5: Filter out records with negative time differences
+                    original_count = len(merged)
+                    # Keep only records where time_diff is positive or zero (not negative)
+                    merged = merged[merged['time_diff'].apply(lambda x: x is not None and pd.notna(x) and x.total_seconds() >= 0)].copy()
+                    filtered_count = len(merged)
+                    negative_count = original_count - filtered_count
+                    
+                    if negative_count > 0:
+                        st.warning(f"⚠️ Removed {negative_count} record(s) with negative time difference (Call Date after Entry Date)")
+                    
                     # Step 7: Create final output dataframe
                     output_df = pd.DataFrame({
                         'Sr. No.': range(1, len(merged) + 1),
@@ -360,7 +370,7 @@ def render_call_notice_merge_page():
                         'Time Difference': merged['time_diff'].apply(format_time_difference)
                     })
                     
-                    # Calculate average time difference
+                    # Calculate average time difference (only from positive time differences)
                     valid_time_diffs = merged['time_diff'].dropna()
                     if len(valid_time_diffs) > 0:
                         avg_seconds = valid_time_diffs.apply(lambda x: x.total_seconds()).mean()
