@@ -648,10 +648,10 @@ def render_automated_workflow_page():
                         guj_rows_pct = (total_rows_2 / total_rows_1 * 100) if total_rows_1 > 0 else 0
                         guj_5l_rows_pct = (total_rows_4 / total_rows_3 * 100) if total_rows_3 > 0 else 0
                         
-                        # Calculate Top 5 Victim Districts from fraud amount data (by unique ACK counts)
+                        # Calculate Top 5 Victim Districts from fraud amount data (by complaint count)
+                        # Note: Each ACK is unique in fraud amount file, so we count records per district
                         victim_district_counts = {}
-                        ack_column = "Acknowledgement No."
-                        if district_column in output_df.columns and ack_column in output_df.columns and len(output_df) > 0:
+                        if district_column in output_df.columns and len(output_df) > 0:
                             # Clean district names: strip whitespace and convert to uppercase for consistency
                             temp_df = output_df.copy()
                             temp_df['clean_district'] = temp_df[district_column].astype(str).str.strip().str.upper()
@@ -659,10 +659,10 @@ def render_automated_workflow_page():
                             # Remove empty/null districts
                             temp_df = temp_df[temp_df['clean_district'].notna() & (temp_df['clean_district'] != '') & (temp_df['clean_district'] != 'NAN')]
                             
-                            # Group by district and count unique acknowledgment numbers
-                            victim_ack_counts = temp_df.groupby('clean_district')[ack_column].nunique().sort_values(ascending=False).head(5)
+                            # Count records per district (each record = 1 complaint since ACKs are unique)
+                            victim_counts = temp_df['clean_district'].value_counts().head(5)
                             
-                            for i, (district, count) in enumerate(victim_ack_counts.items(), 1):
+                            for i, (district, count) in enumerate(victim_counts.items(), 1):
                                 if pd.notna(district) and str(district).strip():
                                     # Convert to title case for better readability
                                     district_display = district.title()
