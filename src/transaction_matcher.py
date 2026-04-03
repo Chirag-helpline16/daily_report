@@ -641,7 +641,7 @@ def render_transaction_matcher_page():
             
             Matching will be done on **3 parameters**:
             1. Acknowledgement Number
-            2. Account Number  
+            2. **Last 7 digits of Account Number** (for flexible matching)
             3. Amount
             
             All 3 must match to add the Disputed Amount.
@@ -923,11 +923,17 @@ def render_transaction_matcher_page():
                             
                             # Normalize columns for matching - convert to string to avoid type conflicts
                             df_base['_norm_ack'] = df_base[r_ack_col].apply(normalize_ack_number).astype(str)
-                            df_base['_norm_acc'] = df_base[r_acc_col].apply(normalize_account_number).astype(str)
+                            # For base file: extract last 7 digits of account number for matching
+                            df_base['_norm_acc'] = df_base[r_acc_col].apply(
+                                lambda x: normalize_account_number(x)[-7:] if normalize_account_number(x) and len(str(normalize_account_number(x))) >= 7 else normalize_account_number(x)
+                            ).astype(str)
                             df_base['_norm_amt'] = df_base[r_amt_col].apply(normalize_amount).astype(str)
                             
                             df3['_norm_ack'] = df3[f3_ack_col].apply(normalize_ack_number).astype(str)
-                            df3['_norm_acc'] = df3[f3_acc_col].apply(normalize_account_number).astype(str)
+                            # For file 3: extract last 7 digits of account number for matching
+                            df3['_norm_acc'] = df3[f3_acc_col].apply(
+                                lambda x: normalize_account_number(x)[-7:] if normalize_account_number(x) and len(str(normalize_account_number(x))) >= 7 else normalize_account_number(x)
+                            ).astype(str)
                             df3['_norm_amt'] = df3[f3_amt_col].apply(normalize_amount).astype(str)
                             
                             # Remove None/nan values (convert to empty string)
@@ -953,7 +959,7 @@ def render_transaction_matcher_page():
                                 (df3_merge['_norm_amt'] != '')
                             ]
                             
-                            # Merge on all 3 columns
+                            # Merge on all 3 columns (ACK + Last 7 digits of Account + Amount)
                             final_df = df_base.merge(
                                 df3_merge,
                                 on=['_norm_ack', '_norm_acc', '_norm_amt'],
