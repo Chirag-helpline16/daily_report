@@ -511,12 +511,23 @@ def normalize_district_name(name):
 
 def aggressive_district_search(row, all_columns):
     """
-    AGGRESSIVE search - scan ALL columns for ANY district/taluka mention
-    This ensures EVERY Gujarat record gets assigned to a district
+    STRICT search - scan specific columns for district/taluka mention
+    Only searches columns that typically contain location data
     """
-    # Search through ALL columns in the row
+    # Define columns that typically contain location information
+    location_keywords = ['district', 'city', 'location', 'place', 'area', 'branch', 'address', 
+                        'ifsc', 'pin', 'pincode', 'state', 'taluka', 'region']
+    
+    # Search through columns that likely contain location data
     for col_name, value in row.items():
         if pd.isna(value) or value is None:
+            continue
+        
+        # Only search columns with location-related names
+        col_lower = str(col_name).lower()
+        is_location_column = any(keyword in col_lower for keyword in location_keywords)
+        
+        if not is_location_column:
             continue
         
         value_str = str(value).lower().strip()
@@ -525,15 +536,16 @@ def aggressive_district_search(row, all_columns):
         if len(value_str) < 3 or value_str.isdigit():
             continue
         
-        # Try to find district/taluka in this value
+        # Try exact match first (full value)
         result = normalize_district_name(value_str)
         if result != 'Unknown':
             return result, f'Found in: {col_name}'
         
-        # Check each word in the value
+        # Check each word in the value (only for words >= 4 characters to avoid false matches)
         words = value_str.replace(',', ' ').replace('-', ' ').replace('_', ' ').replace('/', ' ').split()
         for word in words:
-            if len(word) > 3:
+            # Require minimum 4 characters to reduce false positives
+            if len(word) >= 4:
                 result = normalize_district_name(word)
                 if result != 'Unknown':
                     return result, f'Found in: {col_name} (word: {word})'
@@ -672,15 +684,15 @@ def extract_district_from_pincode(pincode):
 
 def get_district(row, ifsc_col, pincode_col, branch_col=None, address_col=None, district_col=None, use_api=False):
     """
-    AGGRESSIVE district identification - WILL FIND DISTRICT FROM ANY AVAILABLE DATA
+    STRICT district identification - Uses reliable sources only
     
     Priority order:
     1. Existing District column (if provided)
     2. IFSC code (with API for 100% accuracy)
-    3. PIN code
-    4. Branch name
-    5. Address field
-    6. AGGRESSIVE SCAN - Search ALL columns for ANY district/taluka mention
+    3. PIN code (verified mappings only)
+    4. Branch name (if explicitly provided)
+    5. Address field (if explicitly provided)
+    6. STRICT SCAN - Search location-related columns only
     
     Args:
         use_api: If True, uses real-time IFSC API for 100% accuracy (slower)
@@ -688,9 +700,12 @@ def get_district(row, ifsc_col, pincode_col, branch_col=None, address_col=None, 
     """
     # Priority 1: Check if district column already exists
     if district_col and district_col in row.index and not pd.isna(row[district_col]):
-        district = normalize_district_name(str(row[district_col]))
-        if district != 'Unknown':
-            return district, 'District Column'
+        district_value = str(row[district_col]).strip()
+        # Only accept if it's not empty or generic values
+        if district_value and district_value.upper() not in ['', 'NA', 'N/A', 'NULL', 'NONE', '-']:
+            district = normalize_district_name(district_value)
+            if district != 'Unknown':
+                return district, 'District Column'
     
     # Priority 2: Try IFSC first (most reliable with API)
     if ifsc_col and ifsc_col in row.index:
@@ -698,30 +713,36 @@ def get_district(row, ifsc_col, pincode_col, branch_col=None, address_col=None, 
         if district:
             return district, 'IFSC-API' if use_api else 'IFSC'
     
-    # Priority 3: Try PIN code
+    # Priority 3: Try PIN code (verified mappings only)
     if pincode_col and pincode_col in row.index:
         district = extract_district_from_pincode(row[pincode_col])
         if district:
             return district, 'PIN'
     
-    # Priority 4: Try Branch name
-    if branch_col and branch_col in row.index:
-        district = extract_district_from_branch_name(row[branch_col])
+    # Priority 4: Try Branch name (only if explicitly provided)
+    if branch_col and branch_col in row.index and not pd.isna(row[branch_col]):
+        branch_value = str(row[branch_col]).strip()
+        if branch_value and len(branch_value) > 3:
+            district = extract_district_from_branch_name(branch_value)
+            if district:
+                return district, 'Branch Name'
+    
+    # Priority 5: Try Address field (only if explicitly provided)
+    if address_col and address_col in row.index and not pd.isna(row[address_col]):
+        address_value = str(row[address_col]).strip()
+        if address_value and len(address_value) > 5:
+            district = extract_district_from_address(address_value)
+            if district:
+                return district, 'Address'
+    
+    # Priority 6: STRICT SCAN - Search through location-related columns only
+    # Only if no explicit columns were provided
+    if not any([ifsc_col, pincode_col, branch_col, address_col, district_col]):
+        district, source = aggressive_district_search(row, row.index)
         if district:
-            return district, 'Branch Name'
+            return district, source
     
-    # Priority 5: Try Address field
-    if address_col and address_col in row.index:
-        district = extract_district_from_address(row[address_col])
-        if district:
-            return district, 'Address'
-    
-    # Priority 6: AGGRESSIVE SCAN - Search through ALL columns
-    district, source = aggressive_district_search(row, row.index)
-    if district:
-        return district, source
-    
-    # If still not found, return Unknown (should be extremely rare for Gujarat data)
+    # If still not found, return Unknown
     return 'Unknown', 'None'
 
 
@@ -749,7 +770,7 @@ def render_ifsc_pincode_district_split_page():
     st.markdown("""
     Upload a file with IFSC codes and/or PIN codes. The app will intelligently identify districts.
     
-    ⚠️ **For 100% Accuracy**: Enable "Use Real-Time IFSC API" (slower but guaranteed accurate)
+    ⚠️ **RECOMMENDED**: Enable "Use Real-Time IFSC API" for 100% accuracy (especially for police/legal data)
     """)
     
     # Accuracy mode selection
@@ -758,16 +779,16 @@ def render_ifsc_pincode_district_split_page():
     
     with col_mode1:
         use_api = st.checkbox(
-            "🔒 Use Real-Time IFSC API (100% Accurate)",
-            value=False,
+            "🔒 Use Real-Time IFSC API (100% Accurate - RECOMMENDED)",
+            value=True,  # Default to API mode for accuracy
             help="Fetches live data from bank database. Slower but 100% accurate. Recommended for legal/police data."
         )
     
     with col_mode2:
         if use_api:
-            st.warning("⏱️ API mode: Processing will be slower but 100% accurate")
+            st.success("✅ API mode: 100% accurate results (slower)")
         else:
-            st.info("⚡ Fast mode: Uses pattern matching (may have minor inaccuracies)")
+            st.warning("⚡ Fast mode: Uses pattern matching (may have inaccuracies)")
     
     st.markdown("---")
     
@@ -812,9 +833,9 @@ def render_ifsc_pincode_district_split_page():
             st.markdown("---")
             
             # Column selection
-            st.subheader("🎯 Select Columns (Optional - System will scan ALL columns)")
+            st.subheader("🎯 Select Columns (Recommended for Best Accuracy)")
             
-            st.success("✅ **AGGRESSIVE MODE**: Even if you don't select columns, the system will scan EVERY column in your file to find district information!")
+            st.info("✅ **SMART MODE**: Select the columns containing IFSC/PIN/Branch/Address for best accuracy. If not selected, system will scan location-related columns only.")
             
             # Show saved mappings indicator
             saved_count = mapping.get_saved_count()
@@ -964,45 +985,57 @@ def render_ifsc_pincode_district_split_page():
                     
                     # Show warning if unknowns exist
                     if unknown > 0:
-                        st.error(f"""
-                        ⚠️ **{unknown} records could not be identified!**
+                        st.warning(f"""
+                        ⚠️ **{unknown} records could not be identified ({unknown_pct:.1f}%)**
                         
-                        **Recommendations:**
-                        1. Enable "Use Real-Time IFSC API" for 100% IFSC accuracy
-                        2. Select Branch Name and Address columns if available
-                        3. Check the Unknown records below and manually assign districts
+                        **Recommendations to improve accuracy:**
+                        1. ✅ Enable "Use Real-Time IFSC API" if not already enabled
+                        2. ✅ Select the correct IFSC Code column
+                        3. ✅ Select the correct PIN Code column
+                        4. ✅ Select Branch Name and Address columns if available
+                        5. ✅ Review the Unknown records below - they may have invalid/incomplete data
                         """)
                         
                         # Show unknown records for manual review
-                        with st.expander(f"🔍 View {unknown} Unknown Records - ALL DATA", expanded=True):
+                        with st.expander(f"🔍 View {unknown} Unknown Records", expanded=True):
                             unknown_df = df[df['Source'] == 'None'].copy()
                             
-                            st.warning(f"""
+                            st.info(f"""
                             **These {unknown} records could not be automatically identified.**
                             
-                            Please review the data below and help us improve the system by identifying which districts these belong to.
+                            Common reasons:
+                            - Invalid or incomplete IFSC codes
+                            - PIN codes from outside Gujarat
+                            - Missing location data
+                            - Data entry errors
                             """)
                             
-                            # Show ALL columns for unknown records
-                            st.dataframe(unknown_df, use_container_width=True, height=400)
+                            # Show relevant columns only
+                            display_cols = []
+                            if ifsc_col and ifsc_col in unknown_df.columns:
+                                display_cols.append(ifsc_col)
+                            if pin_col and pin_col in unknown_df.columns:
+                                display_cols.append(pin_col)
+                            if branch_col and branch_col in unknown_df.columns:
+                                display_cols.append(branch_col)
+                            if address_col and address_col in unknown_df.columns:
+                                display_cols.append(address_col)
+                            
+                            # If no specific columns, show all
+                            if not display_cols:
+                                display_cols = unknown_df.columns.tolist()
+                            
+                            st.dataframe(unknown_df[display_cols], use_container_width=True, height=400)
                             
                             # Download unknown records for manual review
                             csv_unknown = unknown_df.to_csv(index=False).encode('utf-8')
                             st.download_button(
-                                label="⬇️ Download Unknown Records (ALL Columns) for Manual Review",
+                                label="⬇️ Download Unknown Records for Manual Review",
                                 data=csv_unknown,
                                 file_name=f"unknown_records_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
                                 mime="text/csv",
                                 use_container_width=True
                             )
-                            
-                            st.info("""
-                            **How to help:**
-                            1. Download the CSV file above
-                            2. Look at IFSC codes, addresses, branch names, PIN codes
-                            3. Identify the correct district for each record
-                            4. Share the mappings so we can add them to the system
-                            """)
                     else:
                         st.success("🎉 **100% ACCURACY ACHIEVED!** All records identified successfully!")
                     
