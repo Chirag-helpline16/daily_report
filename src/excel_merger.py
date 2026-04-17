@@ -10,11 +10,65 @@ from typing import List, Tuple
 from datetime import datetime
 
 
-def generate_merged_excel(df: pd.DataFrame) -> bytes:
-    """Generate Excel file bytes from DataFrame."""
+def generate_merged_excel(df: pd.DataFrame, file_sources: List[Tuple[str, int, int]] = None) -> bytes:
+    """
+    Generate Excel file bytes from DataFrame with color-coded rows by source file.
+    
+    Args:
+        df: The merged dataframe
+        file_sources: List of (filename, start_row, end_row) tuples for color coding
+    """
+    from openpyxl.styles import PatternFill, Font
+    
     output = BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         df.to_excel(writer, index=False, sheet_name='Merged Data')
+        
+        # Get the worksheet
+        worksheet = writer.sheets['Merged Data']
+        
+        # Bold the header row
+        for cell in worksheet[1]:
+            cell.font = Font(bold=True)
+        
+        # Color code rows by source file if provided
+        if file_sources:
+            # Define colors for different files (pastel colors)
+            colors = [
+                'E3F2FD',  # Light Blue
+                'F3E5F5',  # Light Purple
+                'E8F5E9',  # Light Green
+                'FFF3E0',  # Light Orange
+                'FCE4EC',  # Light Pink
+                'F1F8E9',  # Light Lime
+                'E0F2F1',  # Light Teal
+                'FFF9C4',  # Light Yellow
+                'FFEBEE',  # Light Red
+                'E8EAF6',  # Light Indigo
+            ]
+            
+            for idx, (filename, start_row, end_row) in enumerate(file_sources):
+                color = colors[idx % len(colors)]
+                fill = PatternFill(start_color=color, end_color=color, fill_type='solid')
+                
+                # Apply color to rows (add 2 because: 1 for header, 1 for 0-indexing)
+                for row_idx in range(start_row + 2, end_row + 2):
+                    for cell in worksheet[row_idx]:
+                        cell.fill = fill
+        
+        # Auto-adjust column widths
+        for column in worksheet.columns:
+            max_length = 0
+            column_letter = column[0].column_letter
+            for cell in column:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(str(cell.value))
+                except:
+                    pass
+            adjusted_width = min(max_length + 2, 50)
+            worksheet.column_dimensions[column_letter].width = adjusted_width
+    
     return output.getvalue()
 
 
@@ -270,6 +324,10 @@ def render_excel_merger_page():
                 # Show what we're merging
                 st.info(f"🔄 Merging {len(st.session_state.merger_files)} files...")
                 
+                # Track which rows came from which file for color coding
+                file_sources = []
+                current_row = 0
+                
                 # Display input file stats
                 total_input_rows = sum(len(df) for _, df in st.session_state.merger_files)
                 st.write(f"**Input:** {total_input_rows:,} total rows from {len(st.session_state.merger_files)} files")
@@ -287,18 +345,28 @@ def render_excel_merger_page():
                         filtered_df = df[list(common_columns)]
                         filtered_dfs.append(filtered_df)
                         st.write(f"  • {filename}: {len(filtered_df):,} rows")
+                        
+                        # Track file source for coloring
+                        file_sources.append((filename, current_row, current_row + len(filtered_df)))
+                        current_row += len(filtered_df)
                     
                     combined_df = pd.concat(filtered_dfs, ignore_index=True)
                     st.success(f"✅ Strict Merge: Kept only {len(common_columns)} common columns. Result: {len(combined_df):,} rows")
                 
                 else:  # Smart Merge or Keep All Columns (both do the same thing)
                     # Show each file being merged
+                    dfs_to_merge = []
                     for filename, df in st.session_state.merger_files:
                         st.write(f"  • {filename}: {len(df):,} rows × {len(df.columns)} columns")
+                        dfs_to_merge.append(df)
+                        
+                        # Track file source for coloring
+                        file_sources.append((filename, current_row, current_row + len(df)))
+                        current_row += len(df)
                     
                     # Concatenate with all columns (union)
                     combined_df = pd.concat(
-                        [df for _, df in st.session_state.merger_files], 
+                        dfs_to_merge, 
                         ignore_index=True,
                         sort=False  # Preserve column order
                     )
@@ -311,6 +379,9 @@ def render_excel_merger_page():
                     if len(all_columns) > len(common_columns):
                         missing_cols = len(all_columns) - len(common_columns)
                         st.info(f"ℹ️ Combined all {len(all_columns)} unique columns. {missing_cols} columns had missing values filled with blanks.")
+                
+                # Store file sources for color coding
+                st.session_state.merger_file_sources = file_sources
                 
                 # Auto-renumber serial number columns if they exist
                 serial_col_names = ['S No.', 'S.No.', 'S No', 'SNo', 'Serial No', 'Sr No', 'Sr. No.', 'Sl No', 'Sl. No.']
@@ -358,6 +429,26 @@ def render_excel_merger_page():
                 breakdown_df = pd.DataFrame(breakdown_data)
                 st.dataframe(breakdown_df, use_container_width=True, hide_index=True)
             
+            # Show color legend
+            with st.expander("🎨 Color Legend (in downloaded Excel)", expanded=False):
+                st.markdown("**Each file's rows will have a different background color in the Excel file:**")
+                colors_display = [
+                    ('Light Blue', '#E3F2FD'),
+                    ('Light Purple', '#F3E5F5'),
+                    ('Light Green', '#E8F5E9'),
+                    ('Light Orange', '#FFF3E0'),
+                    ('Light Pink', '#FCE4EC'),
+                    ('Light Lime', '#F1F8E9'),
+                    ('Light Teal', '#E0F2F1'),
+                    ('Light Yellow', '#FFF9C4'),
+                    ('Light Red', '#FFEBEE'),
+                    ('Light Indigo', '#E8EAF6'),
+                ]
+                
+                for idx, (filename, df) in enumerate(st.session_state.merger_files):
+                    color_name, color_hex = colors_display[idx % len(colors_display)]
+                    st.markdown(f"**{idx + 1}. {filename}** → {color_name}")
+            
             # Preview
             with st.expander("📋 Preview Merged Data (First 50 rows)", expanded=False):
                 st.dataframe(combined_df.head(50), use_container_width=True)
@@ -370,15 +461,17 @@ def render_excel_merger_page():
             download_col1, download_col2 = st.columns(2)
             
             with download_col1:
-                with st.spinner("Generating Excel file..."):
-                    excel_bytes = generate_merged_excel(combined_df)
+                with st.spinner("Generating Excel file with color-coded rows..."):
+                    file_sources = st.session_state.get('merger_file_sources', None)
+                    excel_bytes = generate_merged_excel(combined_df, file_sources)
                 st.download_button(
-                    label=f"📊 Download Excel ({len(combined_df):,} rows)",
+                    label=f"📊 Download Excel ({len(combined_df):,} rows, color-coded)",
                     data=excel_bytes,
                     file_name=f"merged_data_{timestamp}.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     use_container_width=True,
-                    type="primary"
+                    type="primary",
+                    help="Excel file with bold headers and color-coded rows by source file"
                 )
             
             with download_col2:
