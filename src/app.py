@@ -128,7 +128,7 @@ def render_sidebar():
             'bank_ack_pivot': '🏦 Bank ACK Pivot',
             'ack_list_pivot': '📋 ACK List Pivot',
             'automated_workflow': '🔄 Automated Workflow',
-            'column_selector': '📋 Column Selector',
+            'column_selector': '📋 Filter Excel File with the Columns You Need',
             'excel_merger': '📎 Merge Excel Files',
             'call_notice_merge': '📞 Call Notice Data Merge',
             'transaction_matcher': '🔄 Transaction Matcher',
