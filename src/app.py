@@ -117,7 +117,7 @@ def render_sidebar():
         # Page navigation
         pages = {
             'upload': '� Aggregate by Account',
-            'district_download': '📍 District Data Download',
+            'district_download': '📍 Victim-Suspect Mapping & Filter by State/District',
             'districtwise': '📊 Split Data by Column',
             'smart_district_split': '🗺️ Smart District Split',
             'ifsc_pincode_split': '🏦 IFSC/PIN District Split',
