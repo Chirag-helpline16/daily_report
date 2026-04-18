@@ -116,7 +116,7 @@ def render_sidebar():
         
         # Page navigation
         pages = {
-            'upload': '📤 Upload File',
+            'upload': '� Aggregate by Account',
             'mapping': '🔗 Column Mapping',
             'processing': '⚙️ Processing',
             'results': '📊 Results Dashboard',
