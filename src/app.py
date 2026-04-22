@@ -1471,7 +1471,7 @@ def render_report_generator_page():
     st.markdown("---")
     
     # Instructions
-    with st.expander("📖 Instructions", expanded=True):
+    with st.expander("📖 Instructions", expanded=False):
         st.markdown("""
         **This tool generates a comprehensive Excel report with three sheets:**
         
