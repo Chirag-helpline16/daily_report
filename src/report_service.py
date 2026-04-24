@@ -276,11 +276,42 @@ class ReportService:
         if bank_col is None:
             raise ValueError("Could not find bank column in hold file. Expected 'Bank' column.")
         
-        # Convert amount to numeric
-        hold_df[amount_col] = pd.to_numeric(hold_df[amount_col], errors='coerce')
+        # Create a copy to avoid modifying original
+        hold_df_copy = hold_df.copy()
         
-        # Remove rows with NaN amounts or bank names
-        hold_df_clean = hold_df[hold_df[amount_col].notna() & hold_df[bank_col].notna()].copy()
+        # CRITICAL: Clean and convert amount to numeric - EVERY ROW MATTERS
+        # Step 1: Convert to string first
+        hold_df_copy[amount_col] = hold_df_copy[amount_col].astype(str)
+        
+        # Step 2: Remove commas, spaces, currency symbols, and other non-numeric characters
+        # Keep only digits, decimal point, and minus sign
+        hold_df_copy[amount_col] = hold_df_copy[amount_col].str.replace(',', '', regex=False)
+        hold_df_copy[amount_col] = hold_df_copy[amount_col].str.replace(' ', '', regex=False)
+        hold_df_copy[amount_col] = hold_df_copy[amount_col].str.replace('₹', '', regex=False)
+        hold_df_copy[amount_col] = hold_df_copy[amount_col].str.replace('Rs', '', regex=False)
+        hold_df_copy[amount_col] = hold_df_copy[amount_col].str.replace('Rs.', '', regex=False)
+        hold_df_copy[amount_col] = hold_df_copy[amount_col].str.strip()
+        
+        # Step 3: Convert to numeric - this handles strings like "96.54356767865676787657"
+        hold_df_copy[amount_col] = pd.to_numeric(hold_df_copy[amount_col], errors='coerce')
+        
+        # Step 4: Round to 2 decimal places IMMEDIATELY after conversion
+        # This converts 96.54356767865676787657 to 96.54
+        hold_df_copy[amount_col] = hold_df_copy[amount_col].round(2)
+        
+        # Count rows before filtering
+        initial_count = len(hold_df_copy)
+        
+        # Remove ONLY rows with NaN amounts (failed conversion) or missing bank names
+        # DO NOT remove zero amounts - they are valid data
+        hold_df_clean = hold_df_copy[
+            hold_df_copy[amount_col].notna() & 
+            hold_df_copy[bank_col].notna()
+        ].copy()
+        
+        removed_count = initial_count - len(hold_df_clean)
+        self.cleaning_log.append(f"Hold file: Removed {removed_count} rows with invalid amounts (could not convert to number)")
+        self.cleaning_log.append(f"Hold file: Processing {len(hold_df_clean)} valid rows")
         
         # Group by Bank and sum amounts (this handles multiple entries for same bank)
         hold_amounts = hold_df_clean.groupby(bank_col, as_index=False)[amount_col].sum()
@@ -292,8 +323,10 @@ class ReportService:
         # Add SR NO column
         hold_amounts.insert(0, 'SR NO', range(1, len(hold_amounts) + 1))
         
-        # Round amounts to 2 decimal places
-        hold_amounts['PUT ON HOLD AMOUNT'] = hold_amounts['PUT ON HOLD AMOUNT'].round(2)
+        # Round amounts to 2 decimal places and ensure proper float type
+        hold_amounts['PUT ON HOLD AMOUNT'] = hold_amounts['PUT ON HOLD AMOUNT'].astype(float).round(2)
+        
+        self.cleaning_log.append(f"Hold report: Total amount = ₹{hold_amounts['PUT ON HOLD AMOUNT'].sum():,.2f}")
         
         return hold_amounts
     
