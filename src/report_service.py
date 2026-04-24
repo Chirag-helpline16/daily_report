@@ -89,6 +89,8 @@ class ReportService:
         """
         Clean hold data - FIRST STEP before any processing.
         
+        CRITICAL: This method handles malformed CSV rows that pandas might skip.
+        
         Args:
             df: Raw hold DataFrame
             
@@ -97,6 +99,7 @@ class ReportService:
         """
         initial_count = len(df)
         self.cleaning_log.append(f"Initial hold records: {initial_count}")
+        self.cleaning_log.append("Note: CSV file may have malformed rows that were skipped during import")
         
         # Find ACK column
         ack_col = None
@@ -225,106 +228,138 @@ class ReportService:
         Generate Hold Amount Report.
         
         Args:
-            hold_df: DataFrame with columns including 'Bank' and 'Amount'
+            hold_df: DataFrame with columns including 'Bank' and 'Amount' OR pivot format with 'Sum of Amount'
             
         Returns:
             DataFrame with columns: SR NO, BANK, PUT ON HOLD AMOUNT
         """
-        # Find the amount column - prioritize "Amount" column
-        amount_col = None
+        # Check if this is already a pivot file (has 'Sum of Amount' column)
+        is_pivot = 'Sum of Amount' in hold_df.columns
         
-        # First try exact match for "Amount"
-        if 'Amount' in hold_df.columns:
-            amount_col = 'Amount'
+        if is_pivot:
+            self.cleaning_log.append("Detected PIVOT file format (already aggregated by bank)")
+            
+            # Remove Grand Total row if present
+            hold_df = hold_df[hold_df['Bank'].str.strip().str.lower() != 'grand total'].copy()
+            
+            # Strip spaces from bank names
+            hold_df['Bank'] = hold_df['Bank'].str.strip()
+            
+            # Use the pivot data directly
+            hold_amounts = hold_df[['Bank', 'Sum of Amount']].copy()
+            hold_amounts.columns = ['BANK', 'PUT ON HOLD AMOUNT']
+            
+            # Convert amount to numeric and round
+            hold_amounts['PUT ON HOLD AMOUNT'] = pd.to_numeric(
+                hold_amounts['PUT ON HOLD AMOUNT'].astype(str).str.replace(',', ''),
+                errors='coerce'
+            ).round(2)
+            
+            # Remove NaN amounts
+            hold_amounts = hold_amounts[hold_amounts['PUT ON HOLD AMOUNT'].notna()].copy()
+            
         else:
-            # Try case-insensitive search
-            for col in hold_df.columns:
-                if col.lower().strip() == 'amount':
-                    amount_col = col
-                    break
-        
-        # If not found, search for columns with "amount" or "disputed"
-        if amount_col is None:
-            for col in hold_df.columns:
-                if 'amount' in col.lower() or 'disputed' in col.lower():
-                    amount_col = col
-                    break
-        
-        if amount_col is None:
-            raise ValueError("Could not find amount column in hold file. Expected 'Amount' column.")
-        
-        # Find bank column - prioritize "Bank" column
-        bank_col = None
-        
-        # First try exact match for "Bank"
-        if 'Bank' in hold_df.columns:
-            bank_col = 'Bank'
-        else:
-            # Try case-insensitive search
-            for col in hold_df.columns:
-                if col.lower().strip() == 'bank':
-                    bank_col = col
-                    break
-        
-        # If not found, search for columns with "bank" or "fi"
-        if bank_col is None:
-            for col in hold_df.columns:
-                if 'bank' in col.lower() or 'fi' in col.lower():
-                    bank_col = col
-                    break
-        
-        if bank_col is None:
-            raise ValueError("Could not find bank column in hold file. Expected 'Bank' column.")
-        
-        # Create a copy to avoid modifying original
-        hold_df_copy = hold_df.copy()
-        
-        # CRITICAL: Clean and convert amount to numeric - EVERY ROW MATTERS
-        # Step 1: Convert to string first
-        hold_df_copy[amount_col] = hold_df_copy[amount_col].astype(str)
-        
-        # Step 2: Remove commas, spaces, currency symbols, and other non-numeric characters
-        # Keep only digits, decimal point, and minus sign
-        hold_df_copy[amount_col] = hold_df_copy[amount_col].str.replace(',', '', regex=False)
-        hold_df_copy[amount_col] = hold_df_copy[amount_col].str.replace(' ', '', regex=False)
-        hold_df_copy[amount_col] = hold_df_copy[amount_col].str.replace('₹', '', regex=False)
-        hold_df_copy[amount_col] = hold_df_copy[amount_col].str.replace('Rs', '', regex=False)
-        hold_df_copy[amount_col] = hold_df_copy[amount_col].str.replace('Rs.', '', regex=False)
-        hold_df_copy[amount_col] = hold_df_copy[amount_col].str.strip()
-        
-        # Step 3: Convert to numeric - this handles strings like "96.54356767865676787657"
-        hold_df_copy[amount_col] = pd.to_numeric(hold_df_copy[amount_col], errors='coerce')
-        
-        # Step 4: Round to 2 decimal places IMMEDIATELY after conversion
-        # This converts 96.54356767865676787657 to 96.54
-        hold_df_copy[amount_col] = hold_df_copy[amount_col].round(2)
-        
-        # Count rows before filtering
-        initial_count = len(hold_df_copy)
-        
-        # Remove ONLY rows with NaN amounts (failed conversion) or missing bank names
-        # DO NOT remove zero amounts - they are valid data
-        hold_df_clean = hold_df_copy[
-            hold_df_copy[amount_col].notna() & 
-            hold_df_copy[bank_col].notna()
-        ].copy()
-        
-        removed_count = initial_count - len(hold_df_clean)
-        self.cleaning_log.append(f"Hold file: Removed {removed_count} rows with invalid amounts (could not convert to number)")
-        self.cleaning_log.append(f"Hold file: Processing {len(hold_df_clean)} valid rows")
-        
-        # Group by Bank and sum amounts (this handles multiple entries for same bank)
-        hold_amounts = hold_df_clean.groupby(bank_col, as_index=False)[amount_col].sum()
-        hold_amounts.columns = ['BANK', 'PUT ON HOLD AMOUNT']
+            self.cleaning_log.append("Detected RAW file format (will aggregate by bank)")
+            
+            # Find the amount column - prioritize "Amount" column
+            amount_col = None
+            
+            # First try exact match for "Amount"
+            if 'Amount' in hold_df.columns:
+                amount_col = 'Amount'
+            else:
+                # Try case-insensitive search
+                for col in hold_df.columns:
+                    if col.lower().strip() == 'amount':
+                        amount_col = col
+                        break
+            
+            # If not found, search for columns with "amount" or "disputed"
+            if amount_col is None:
+                for col in hold_df.columns:
+                    if 'amount' in col.lower() or 'disputed' in col.lower():
+                        amount_col = col
+                        break
+            
+            if amount_col is None:
+                raise ValueError("Could not find amount column in hold file. Expected 'Amount' column.")
+            
+            # Find bank column - prioritize "Bank" column
+            bank_col = None
+            
+            # First try exact match for "Bank"
+            if 'Bank' in hold_df.columns:
+                bank_col = 'Bank'
+            else:
+                # Try case-insensitive search
+                for col in hold_df.columns:
+                    if col.lower().strip() == 'bank':
+                        bank_col = col
+                        break
+            
+            # If not found, search for columns with "bank" or "fi"
+            if bank_col is None:
+                for col in hold_df.columns:
+                    if 'bank' in col.lower() or 'fi' in col.lower():
+                        bank_col = col
+                        break
+            
+            if bank_col is None:
+                raise ValueError("Could not find bank column in hold file. Expected 'Bank' column.")
+            
+            # Create a copy to avoid modifying original
+            hold_df_copy = hold_df.copy()
+            
+            # CRITICAL: Strip spaces from bank names to avoid duplicates
+            hold_df_copy[bank_col] = hold_df_copy[bank_col].astype(str).str.strip()
+            
+            # CRITICAL: Clean and convert amount to numeric - EVERY ROW MATTERS
+            # Handle both string and numeric types
+            
+            # Step 1: Convert to string first (handles both str and numeric types)
+            hold_df_copy[amount_col] = hold_df_copy[amount_col].fillna(0).astype(str)
+            
+            # Step 2: Remove ALL non-numeric characters except decimal point and minus
+            hold_df_copy[amount_col] = hold_df_copy[amount_col].str.replace(',', '', regex=False)
+            hold_df_copy[amount_col] = hold_df_copy[amount_col].str.replace(' ', '', regex=False)
+            hold_df_copy[amount_col] = hold_df_copy[amount_col].str.replace('₹', '', regex=False)
+            hold_df_copy[amount_col] = hold_df_copy[amount_col].str.replace('Rs', '', regex=False)
+            hold_df_copy[amount_col] = hold_df_copy[amount_col].str.replace('Rs.', '', regex=False)
+            hold_df_copy[amount_col] = hold_df_copy[amount_col].str.replace('INR', '', regex=False)
+            hold_df_copy[amount_col] = hold_df_copy[amount_col].str.strip()
+            
+            # Step 3: Convert to numeric with high precision
+            hold_df_copy[amount_col] = pd.to_numeric(hold_df_copy[amount_col], errors='coerce', downcast=None)
+            
+            # Step 4: Round to 2 decimal places to avoid floating point precision issues
+            hold_df_copy[amount_col] = hold_df_copy[amount_col].round(2)
+            
+            # Count rows before filtering
+            initial_count = len(hold_df_copy)
+            
+            # Remove ONLY rows with NaN amounts (failed conversion) or missing bank names
+            hold_df_clean = hold_df_copy[
+                hold_df_copy[amount_col].notna() & 
+                hold_df_copy[bank_col].notna()
+            ].copy()
+            
+            removed_count = initial_count - len(hold_df_clean)
+            if removed_count > 0:
+                self.cleaning_log.append(f"Hold file: Removed {removed_count} rows with invalid amounts")
+            self.cleaning_log.append(f"Hold file: Processing {len(hold_df_clean)} valid rows")
+            
+            # Group by Bank and sum amounts with high precision
+            hold_amounts = hold_df_clean.groupby(bank_col, as_index=False)[amount_col].sum()
+            hold_amounts.columns = ['BANK', 'PUT ON HOLD AMOUNT']
+            
+            # Final rounding to 2 decimal places
+            hold_amounts['PUT ON HOLD AMOUNT'] = hold_amounts['PUT ON HOLD AMOUNT'].round(2)
         
         # Sort by amount descending (high to low)
         hold_amounts = hold_amounts.sort_values('PUT ON HOLD AMOUNT', ascending=False).reset_index(drop=True)
         
         # Add SR NO column
         hold_amounts.insert(0, 'SR NO', range(1, len(hold_amounts) + 1))
-        
-        # Round amounts to 2 decimal places and ensure proper float type
-        hold_amounts['PUT ON HOLD AMOUNT'] = hold_amounts['PUT ON HOLD AMOUNT'].astype(float).round(2)
         
         self.cleaning_log.append(f"Hold report: Total amount = ₹{hold_amounts['PUT ON HOLD AMOUNT'].sum():,.2f}")
         

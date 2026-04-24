@@ -1513,7 +1513,7 @@ def render_report_generator_page():
             "Upload CSV or Excel file",
             type=['csv', 'xlsx', 'xls'],
             key="hold_upload",
-            help="File containing bank names and hold amounts"
+            help="Upload the PIVOT file with bank-wise aggregated amounts (columns: Bank, Sum of Amount)"
         )
     
     with col3:
@@ -1545,12 +1545,35 @@ def render_report_generator_page():
                 
                 # Read hold file
                 if hold_file.name.endswith('.csv'):
-                    # Try different encodings and error handling for CSV
+                    # CRITICAL: Handle malformed CSV rows properly
+                    # Some rows may have extra commas causing field count mismatch
+                    st.info("⚠️ Checking for malformed CSV rows...")
+                    
                     try:
-                        hold_df = pd.read_csv(hold_file, encoding='utf-8', on_bad_lines='skip')
-                    except:
+                        # First try normal read
+                        hold_df = pd.read_csv(hold_file, encoding='utf-8')
+                        st.success(f"✅ Hold file loaded: {len(hold_df)} rows (no malformed rows)")
+                    except Exception as e:
+                        # If normal read fails, use error recovery
                         hold_file.seek(0)
-                        hold_df = pd.read_csv(hold_file, encoding='latin-1', on_bad_lines='skip')
+                        st.warning(f"⚠️ Malformed rows detected, using error recovery...")
+                        
+                        try:
+                            # Try with skip bad lines and warn
+                            hold_df = pd.read_csv(hold_file, encoding='utf-8', on_bad_lines='skip')
+                            
+                            # Count how many rows were skipped
+                            hold_file.seek(0)
+                            total_lines = sum(1 for line in hold_file) - 1  # -1 for header
+                            hold_file.seek(0)
+                            skipped = total_lines - len(hold_df)
+                            
+                            if skipped > 0:
+                                st.warning(f"⚠️ {skipped} malformed rows were skipped. Some banks may be missing from the report.")
+                                st.info("💡 Tip: Open the CSV in Excel, save it again, and re-upload to fix formatting issues.")
+                        except:
+                            hold_file.seek(0)
+                            hold_df = pd.read_csv(hold_file, encoding='latin-1', on_bad_lines='skip')
                 else:
                     hold_df = pd.read_excel(hold_file)
                 st.success(f"✅ Hold file loaded: {len(hold_df)} rows")
