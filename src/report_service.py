@@ -169,27 +169,27 @@ class ReportService:
         Generate Account Report from layerwise data.
         
         Args:
-            layerwise_df: CLEANED DataFrame with columns including 'Acknowledgement No.' and 'Bank/FIs'
+            layerwise_df: CLEANED DataFrame with columns including 'Account No.' and 'Bank/FIs'
             
         Returns:
             DataFrame with columns: SR NO, Bank, Count of Account No
         """
         # Validate required columns exist
-        ack_col = None
+        account_col = None
         bank_col = None
         
         for col in layerwise_df.columns:
-            if 'acknowledgement' in col.lower() or 'ack' in col.lower():
-                ack_col = col
+            if 'account' in col.lower() and 'no' in col.lower():
+                account_col = col
             if 'bank' in col.lower() or 'fi' in col.lower():
                 bank_col = col
         
-        if ack_col is None:
-            raise ValueError("CRITICAL: Acknowledgement Number column not found in layerwise file")
+        if account_col is None:
+            raise ValueError("CRITICAL: Account Number column not found in layerwise file")
         if bank_col is None:
             raise ValueError("CRITICAL: Bank/FIs column not found in layerwise file")
         
-        self.cleaning_log.append(f"Using ACK column: {ack_col}")
+        self.cleaning_log.append(f"Using Account column: {account_col}")
         self.cleaning_log.append(f"Using Bank column: {bank_col}")
         
         # Filter banks - only include rows where Bank/FIs contains "Bank" or "bank" or "BANK"
@@ -199,11 +199,11 @@ class ReportService:
         
         self.cleaning_log.append(f"Filtered to {len(bank_df)} records containing 'Bank' in bank name")
         
-        # Remove rows with empty or null ACK numbers
-        bank_df = bank_df[bank_df[ack_col].notna() & (bank_df[ack_col].astype(str).str.strip() != '')].copy()
+        # Remove rows with empty or null Account numbers
+        bank_df = bank_df[bank_df[account_col].notna() & (bank_df[account_col].astype(str).str.strip() != '')].copy()
         
-        # Group by Bank and count distinct Acknowledgement numbers
-        account_counts = bank_df.groupby(bank_col)[ack_col].nunique().reset_index()
+        # Group by Bank and count distinct Account numbers
+        account_counts = bank_df.groupby(bank_col)[account_col].nunique().reset_index()
         account_counts.columns = ['Bank', 'Count of Account No']
         
         self.cleaning_log.append(f"Generated account report with {len(account_counts)} unique banks")

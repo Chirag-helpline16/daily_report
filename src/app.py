@@ -1476,11 +1476,11 @@ def render_report_generator_page():
         **This tool generates a comprehensive Excel report with three sheets:**
         
         1. **PUT ON HOLD** - Bank-wise hold amounts
-        2. **ACCOUNT** - Bank-wise account count (distinct ACK numbers)
+        2. **ACCOUNT** - Bank-wise account count (distinct Account Numbers)
         3. **Complaint Un Attended** - Bank/Wallet/Merchant-wise unattended complaints
         
         **Required Files:**
-        - **All Layer / Layerwise File**: Excel file with columns including 'Acknowledgement No.' and 'Bank/FIs'
+        - **All Layer / Layerwise File**: Excel file with columns including 'Account No.' and 'Bank/FIs'
         - **Hold File**: CSV/Excel file with bank names and hold amounts
         - **Unattended File**: CSV/Excel file with bank/wallet/merchant names and unattended counts
         
@@ -1504,7 +1504,7 @@ def render_report_generator_page():
             "Upload Excel file",
             type=['xlsx', 'xls'],
             key="layerwise_upload",
-            help="File containing Acknowledgement No. and Bank/FIs columns"
+            help="File containing Account No. and Bank/FIs columns"
         )
     
     with col2:
