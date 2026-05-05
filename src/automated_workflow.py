@@ -5,6 +5,8 @@ from datetime import datetime
 import zipfile
 import os
 import json
+from openpyxl import load_workbook
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 
 
 # Import styling
@@ -14,6 +16,88 @@ if _project_root not in sys.path:
     sys.path.insert(0, _project_root)
 
 from src.ui_styling import render_page_header_with_info
+
+
+def format_excel_professional(excel_buffer):
+    """
+    Apply professional formatting to Excel file.
+    
+    Args:
+        excel_buffer: BytesIO buffer containing Excel file
+        
+    Returns:
+        BytesIO buffer with formatted Excel file
+    """
+    # Load workbook
+    wb = load_workbook(excel_buffer)
+    ws = wb.active
+    
+    # Define styles
+    header_font = Font(name='Calibri', size=11, bold=True, color="FFFFFF")
+    header_fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")  # Professional blue
+    
+    normal_font = Font(name='Calibri', size=10, color="000000")
+    
+    border = Border(
+        left=Side(style='thin', color='D3D3D3'),
+        right=Side(style='thin', color='D3D3D3'),
+        top=Side(style='thin', color='D3D3D3'),
+        bottom=Side(style='thin', color='D3D3D3')
+    )
+    
+    center_align = Alignment(horizontal='center', vertical='center')
+    left_align = Alignment(horizontal='left', vertical='center')
+    
+    # Format header row (row 1)
+    for cell in ws[1]:
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = center_align
+        cell.border = border
+    
+    # Set header row height
+    ws.row_dimensions[1].height = 25
+    
+    # Format data rows
+    for row_idx, row in enumerate(ws.iter_rows(min_row=2), start=2):
+        for col_idx, cell in enumerate(row, start=1):
+            cell.font = normal_font
+            cell.border = border
+            
+            # Center align for S No. column (column A)
+            if col_idx == 1:
+                cell.alignment = center_align
+            else:
+                cell.alignment = left_align
+            
+            # Set row height
+            ws.row_dimensions[row_idx].height = 18
+    
+    # Auto-adjust column widths
+    for column in ws.columns:
+        max_length = 0
+        column_letter = column[0].column_letter
+        
+        for cell in column:
+            try:
+                if cell.value:
+                    max_length = max(max_length, len(str(cell.value)))
+            except:
+                pass
+        
+        # Set width with some padding
+        adjusted_width = min(max_length + 3, 50)
+        ws.column_dimensions[column_letter].width = adjusted_width
+    
+    # Freeze header row
+    ws.freeze_panes = 'A2'
+    
+    # Save formatted workbook
+    formatted_buffer = io.BytesIO()
+    wb.save(formatted_buffer)
+    formatted_buffer.seek(0)
+    
+    return formatted_buffer
 
 
 def load_column_mappings():
@@ -790,17 +874,21 @@ def render_automated_workflow_page():
                                 if 'S No.' in district_df.columns:
                                     district_df['S No.'] = range(1, len(district_df) + 1)
                                 
-                                # Create Excel file
+                                # Create Excel file with formatting
                                 excel_buffer = io.BytesIO()
                                 with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
                                     district_df.to_excel(writer, sheet_name='Data', index=False)
+                                
+                                # Apply professional formatting
+                                excel_buffer.seek(0)
+                                formatted_buffer = format_excel_professional(excel_buffer)
                                 
                                 # Clean district name for filename
                                 clean_district = str(district).replace('/', '_').replace('\\', '_').replace(':', '_')
                                 filename = f"{clean_district}.xlsx"
                                 
                                 # Add to ZIP
-                                zip_file.writestr(filename, excel_buffer.getvalue())
+                                zip_file.writestr(filename, formatted_buffer.getvalue())
                         
                         zip_files[zip_name] = zip_buffer.getvalue()
                         st.success(f"✅ {zip_name}.zip: {len(unique_districts)} districts")
@@ -845,9 +933,11 @@ def render_automated_workflow_page():
                     # File 1
                     excel_buffer1 = io.BytesIO()
                     files['file1_all'].to_excel(excel_buffer1, index=False)
+                    excel_buffer1.seek(0)
+                    formatted_buffer1 = format_excel_professional(excel_buffer1)
                     st.download_button(
                         "⬇️ 1. All Matched Data",
-                        data=excel_buffer1.getvalue(),
+                        data=formatted_buffer1.getvalue(),
                         file_name=f"All_Matched_{timestamp}.xlsx",
                         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                         key="dl1"
@@ -856,9 +946,11 @@ def render_automated_workflow_page():
                     # File 4
                     excel_buffer4 = io.BytesIO()
                     files['file4_gujarat_5lacs'].to_excel(excel_buffer4, index=False)
+                    excel_buffer4.seek(0)
+                    formatted_buffer4 = format_excel_professional(excel_buffer4)
                     st.download_button(
                         "⬇️ 4. Gujarat 5 Lacs Plus",
-                        data=excel_buffer4.getvalue(),
+                        data=formatted_buffer4.getvalue(),
                         file_name=f"Gujarat_5Lacs_Plus_{timestamp}.xlsx",
                         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                         key="dl4"
@@ -868,9 +960,11 @@ def render_automated_workflow_page():
                     # File 2
                     excel_buffer2 = io.BytesIO()
                     files['file2_gujarat'].to_excel(excel_buffer2, index=False)
+                    excel_buffer2.seek(0)
+                    formatted_buffer2 = format_excel_professional(excel_buffer2)
                     st.download_button(
                         "⬇️ 2. Gujarat Only",
-                        data=excel_buffer2.getvalue(),
+                        data=formatted_buffer2.getvalue(),
                         file_name=f"Gujarat_{timestamp}.xlsx",
                         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                         key="dl2"
@@ -879,9 +973,11 @@ def render_automated_workflow_page():
                     # File 5
                     excel_buffer5 = io.BytesIO()
                     files['file5_non_guj'].to_excel(excel_buffer5, index=False)
+                    excel_buffer5.seek(0)
+                    formatted_buffer5 = format_excel_professional(excel_buffer5)
                     st.download_button(
                         "⬇️ 5. Non-Gujarat",
-                        data=excel_buffer5.getvalue(),
+                        data=formatted_buffer5.getvalue(),
                         file_name=f"Non_Gujarat_{timestamp}.xlsx",
                         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                         key="dl5"
@@ -891,9 +987,11 @@ def render_automated_workflow_page():
                     # File 3
                     excel_buffer3 = io.BytesIO()
                     files['file3_5lacs'].to_excel(excel_buffer3, index=False)
+                    excel_buffer3.seek(0)
+                    formatted_buffer3 = format_excel_professional(excel_buffer3)
                     st.download_button(
                         "⬇️ 3. 5 Lacs Plus",
-                        data=excel_buffer3.getvalue(),
+                        data=formatted_buffer3.getvalue(),
                         file_name=f"5Lacs_Plus_{timestamp}.xlsx",
                         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                         key="dl3"
@@ -902,9 +1000,11 @@ def render_automated_workflow_page():
                     # File 6
                     excel_buffer6 = io.BytesIO()
                     files['file6_non_guj_5lacs'].to_excel(excel_buffer6, index=False)
+                    excel_buffer6.seek(0)
+                    formatted_buffer6 = format_excel_professional(excel_buffer6)
                     st.download_button(
                         "⬇️ 6. Non-Gujarat 5 Lacs Plus",
-                        data=excel_buffer6.getvalue(),
+                        data=formatted_buffer6.getvalue(),
                         file_name=f"Non_Gujarat_5Lacs_Plus_{timestamp}.xlsx",
                         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                         key="dl6"
