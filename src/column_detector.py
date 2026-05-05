@@ -55,7 +55,8 @@ class ColumnDetector:
             'disputed amt', 'chargeback amount'
         ],
         'bank_name': [
-            'bank name', 'bank', 'beneficiary bank', 'receiving bank'
+            'bank name', 'bank', 'beneficiary bank', 'receiving bank',
+            'bank fis', 'bank fi', 'bankfis'
         ],
         'district': [
             'district', 'dist', 'district name'

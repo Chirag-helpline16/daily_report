@@ -102,9 +102,9 @@ def render_top_10_suspect_accounts_page():
             st.info("🎯 Selecting top 10 accounts by disputed amount...")
             
             # Sort by disputed amount (descending) and take top 10
-            top_10 = sorted(sorted_accounts, key=lambda x: x.disputed_amount, reverse=True)[:10]
+            top_10 = sorted(sorted_accounts, key=lambda x: x.total_disputed_amount, reverse=True)[:10]
             
-            st.success(f"✅ Top 10 accounts selected (Total disputed: ₹{sum(acc.disputed_amount for acc in top_10):,.2f})")
+            st.success(f"✅ Top 10 accounts selected (Total disputed: ₹{sum(acc.total_disputed_amount for acc in top_10):,.2f})")
             
             # STEP 4: Generate Excel file
             st.info("📄 Generating Excel report...")
@@ -130,9 +130,9 @@ def render_top_10_suspect_accounts_page():
                     "Rank": i,
                     "Account No.": acc.account_number,
                     "Bank": acc.bank_name,
-                    "Disputed Amount": f"₹{acc.disputed_amount:,.2f}",
+                    "Disputed Amount": f"₹{acc.total_disputed_amount:,.2f}",
                     "Total Amount": f"₹{acc.total_amount:,.2f}",
-                    "Transactions": acc.transaction_count
+                    "Transactions": acc.total_transactions
                 })
             
             summary_df = pd.DataFrame(summary_data)
@@ -194,7 +194,7 @@ def generate_top_10_excel(accounts, date_str):
     right_align = Alignment(horizontal='right', vertical='center')
     
     # Title row
-    ws.merge_cells('A1:K1')
+    ws.merge_cells('A1:L1')
     title_cell = ws['A1']
     title_cell.value = f"{date_str} Top 10 Suspect Accounts from Layer 1"
     title_cell.font = title_font
@@ -203,19 +203,20 @@ def generate_top_10_excel(accounts, date_str):
     title_cell.border = border
     ws.row_dimensions[1].height = 30
     
-    # Headers (same as aggregated by account)
+    # Headers (exact match to aggregated by account output)
     headers = [
-        "SR NO",
-        "Account No.",
+        "Sr.No.",
+        "Fraudster Bank Account Number",
+        "All Acknowledgement Numbers",
+        "ACK Count",
         "Bank Name",
         "IFSC Code",
         "Address",
-        "Mobile",
-        "Email",
-        "Transaction Count",
-        "ACK Numbers",
+        "District",
+        "State",
+        "Total Transactions",
         "Total Amount",
-        "Disputed Amount"
+        "Total Disputed Amount"
     ]
     
     for col_idx, header in enumerate(headers, 1):
@@ -230,81 +231,91 @@ def generate_top_10_excel(accounts, date_str):
     
     # Data rows
     for row_idx, account in enumerate(accounts, 3):
-        # SR NO
+        # Sr.No.
         cell = ws.cell(row=row_idx, column=1)
         cell.value = row_idx - 2
         cell.font = normal_font
         cell.alignment = center_align
         cell.border = border
         
-        # Account No.
+        # Fraudster Bank Account Number
         cell = ws.cell(row=row_idx, column=2)
         cell.value = account.account_number
         cell.font = normal_font
         cell.alignment = left_align
         cell.border = border
         
-        # Bank Name
+        # All Acknowledgement Numbers
         cell = ws.cell(row=row_idx, column=3)
+        cell.value = account.acknowledgement_numbers
+        cell.font = normal_font
+        cell.alignment = left_align
+        cell.border = border
+        
+        # ACK Count
+        cell = ws.cell(row=row_idx, column=4)
+        # Count the number of ACK numbers (semicolon-separated)
+        ack_count = len([ack for ack in account.acknowledgement_numbers.split(';') if ack.strip()]) if account.acknowledgement_numbers else 0
+        cell.value = ack_count
+        cell.font = normal_font
+        cell.alignment = center_align
+        cell.border = border
+        cell.number_format = '#,##0'
+        
+        # Bank Name
+        cell = ws.cell(row=row_idx, column=5)
         cell.value = account.bank_name
         cell.font = normal_font
         cell.alignment = left_align
         cell.border = border
         
         # IFSC Code
-        cell = ws.cell(row=row_idx, column=4)
+        cell = ws.cell(row=row_idx, column=6)
         cell.value = account.ifsc_code if account.ifsc_code else ""
         cell.font = normal_font
         cell.alignment = left_align
         cell.border = border
         
         # Address
-        cell = ws.cell(row=row_idx, column=5)
+        cell = ws.cell(row=row_idx, column=7)
         cell.value = account.address if account.address else ""
         cell.font = normal_font
         cell.alignment = left_align
         cell.border = border
         
-        # Mobile
-        cell = ws.cell(row=row_idx, column=6)
-        cell.value = account.mobile if account.mobile else ""
-        cell.font = normal_font
-        cell.alignment = left_align
-        cell.border = border
-        
-        # Email
-        cell = ws.cell(row=row_idx, column=7)
-        cell.value = account.email if account.email else ""
-        cell.font = normal_font
-        cell.alignment = left_align
-        cell.border = border
-        
-        # Transaction Count
+        # District
         cell = ws.cell(row=row_idx, column=8)
-        cell.value = account.transaction_count
+        cell.value = account.district if account.district else ""
+        cell.font = normal_font
+        cell.alignment = left_align
+        cell.border = border
+        
+        # State
+        cell = ws.cell(row=row_idx, column=9)
+        cell.value = account.state if account.state else ""
+        cell.font = normal_font
+        cell.alignment = left_align
+        cell.border = border
+        
+        # Total Transactions
+        cell = ws.cell(row=row_idx, column=10)
+        cell.value = account.total_transactions
         cell.font = normal_font
         cell.alignment = center_align
         cell.border = border
         cell.number_format = '#,##0'
         
-        # ACK Numbers
-        cell = ws.cell(row=row_idx, column=9)
-        cell.value = account.ack_numbers
-        cell.font = normal_font
-        cell.alignment = left_align
-        cell.border = border
-        
         # Total Amount
-        cell = ws.cell(row=row_idx, column=10)
+        cell = ws.cell(row=row_idx, column=11)
         cell.value = account.total_amount
         cell.font = normal_font
         cell.alignment = right_align
         cell.border = border
         cell.number_format = '₹#,##0.00'
         
-        # Disputed Amount
-        cell = ws.cell(row=row_idx, column=11)
-        cell.value = account.disputed_amount
+        # Total Disputed Amount
+        cell = ws.cell(row=row_idx, column=12)
+        cell.value = account.total_disputed_amount
         cell.font = normal_font
         cell.alignment = right_align
         cell.border = border
@@ -314,17 +325,18 @@ def generate_top_10_excel(accounts, date_str):
     
     # Adjust column widths
     column_widths = {
-        'A': 8,   # SR NO
-        'B': 20,  # Account No.
-        'C': 30,  # Bank Name
-        'D': 15,  # IFSC Code
-        'E': 40,  # Address
-        'F': 15,  # Mobile
-        'G': 25,  # Email
-        'H': 15,  # Transaction Count
-        'I': 30,  # ACK Numbers
-        'J': 18,  # Total Amount
-        'K': 18   # Disputed Amount
+        'A': 8,   # Sr.No.
+        'B': 25,  # Fraudster Bank Account Number
+        'C': 35,  # All Acknowledgement Numbers
+        'D': 12,  # ACK Count
+        'E': 30,  # Bank Name
+        'F': 15,  # IFSC Code
+        'G': 40,  # Address
+        'H': 20,  # District
+        'I': 20,  # State
+        'J': 18,  # Total Transactions
+        'K': 18,  # Total Amount
+        'L': 20   # Total Disputed Amount
     }
     
     for col, width in column_widths.items():
