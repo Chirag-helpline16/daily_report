@@ -20,7 +20,7 @@ from src.ui_styling import render_page_header_with_info
 
 def format_excel_professional(excel_buffer):
     """
-    Apply professional formatting to Excel file.
+    Apply professional formatting to Excel file with vibrant colors.
     
     Args:
         excel_buffer: BytesIO buffer containing Excel file
@@ -32,37 +32,46 @@ def format_excel_professional(excel_buffer):
     wb = load_workbook(excel_buffer)
     ws = wb.active
     
-    # Define styles
-    header_font = Font(name='Calibri', size=11, bold=True, color="FFFFFF")
-    header_fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")  # Professional blue
+    # Define vibrant styles
+    header_font = Font(name='Calibri', size=12, bold=True, color="FFFFFF")
+    header_fill = PatternFill(start_color="0070C0", end_color="0070C0", fill_type="solid")  # Vibrant blue
     
-    normal_font = Font(name='Calibri', size=10, color="000000")
+    normal_font = Font(name='Calibri', size=11, color="000000")
     
+    # Alternating row colors for better readability
+    even_row_fill = PatternFill(start_color="F2F2F2", end_color="F2F2F2", fill_type="solid")  # Light gray
+    odd_row_fill = PatternFill(start_color="FFFFFF", end_color="FFFFFF", fill_type="solid")  # White
+    
+    # Darker borders for better definition
     border = Border(
-        left=Side(style='thin', color='D3D3D3'),
-        right=Side(style='thin', color='D3D3D3'),
-        top=Side(style='thin', color='D3D3D3'),
-        bottom=Side(style='thin', color='D3D3D3')
+        left=Side(style='thin', color='000000'),
+        right=Side(style='thin', color='000000'),
+        top=Side(style='thin', color='000000'),
+        bottom=Side(style='thin', color='000000')
     )
     
-    center_align = Alignment(horizontal='center', vertical='center')
-    left_align = Alignment(horizontal='left', vertical='center')
+    center_align = Alignment(horizontal='center', vertical='center', wrap_text=False)
+    left_align = Alignment(horizontal='left', vertical='center', wrap_text=False)
     
-    # Format header row (row 1)
+    # Format header row (row 1) - Make it stand out
     for cell in ws[1]:
         cell.font = header_font
         cell.fill = header_fill
         cell.alignment = center_align
         cell.border = border
     
-    # Set header row height
-    ws.row_dimensions[1].height = 25
+    # Set header row height - taller for impact
+    ws.row_dimensions[1].height = 30
     
-    # Format data rows
+    # Format data rows with alternating colors
     for row_idx, row in enumerate(ws.iter_rows(min_row=2), start=2):
+        # Alternate row colors
+        row_fill = even_row_fill if row_idx % 2 == 0 else odd_row_fill
+        
         for col_idx, cell in enumerate(row, start=1):
             cell.font = normal_font
             cell.border = border
+            cell.fill = row_fill
             
             # Center align for S No. column (column A)
             if col_idx == 1:
@@ -71,9 +80,9 @@ def format_excel_professional(excel_buffer):
                 cell.alignment = left_align
             
             # Set row height
-            ws.row_dimensions[row_idx].height = 18
+            ws.row_dimensions[row_idx].height = 20
     
-    # Auto-adjust column widths
+    # Auto-adjust column widths with better spacing
     for column in ws.columns:
         max_length = 0
         column_letter = column[0].column_letter
@@ -85,12 +94,15 @@ def format_excel_professional(excel_buffer):
             except:
                 pass
         
-        # Set width with some padding
-        adjusted_width = min(max_length + 3, 50)
+        # Set width with generous padding
+        adjusted_width = min(max_length + 5, 60)
         ws.column_dimensions[column_letter].width = adjusted_width
     
     # Freeze header row
     ws.freeze_panes = 'A2'
+    
+    # Add filter to header row
+    ws.auto_filter.ref = ws.dimensions
     
     # Save formatted workbook
     formatted_buffer = io.BytesIO()
