@@ -1,8 +1,8 @@
 """
-Fraud Analysis Web Application.
+DataLens for Cyber Cell - Web Application.
 
 A Streamlit-based web application for law enforcement cybercrime departments
-to analyze and consolidate fraud transaction data from Excel files.
+to analyze and consolidate transaction data from Excel files.
 
 Last Updated: 2026-04-27 - Account report now uses distinct Account Numbers
 """
@@ -64,7 +64,7 @@ from src.top_10_suspect_accounts import render_top_10_suspect_accounts_page
 
 # Page configuration
 st.set_page_config(
-    page_title="Fraud Analysis Tool - Gujarat Cyber Police",
+    page_title="DataLens for Cyber Cell",
     page_icon="🔍",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -114,8 +114,8 @@ def init_session_state():
 def render_sidebar():
     """Render the navigation sidebar."""
     with st.sidebar:
-        st.title("🔍 Fraud Analysis")
-        st.caption("Gujarat Cyber Police")
+        st.title("🔍 DataLens")
+        st.caption("for Cyber Cell")
         st.markdown("---")
         
         # Page navigation
@@ -740,7 +740,7 @@ def render_results_page():
                 
                 dataset_id, error_msg = db_service.save_dataset(
                     name=save_dataset_name,
-                    description=f"Saved from Fraud Analysis Tool - {len(accounts)} accounts",
+                    description=f"Saved from DataLens for Cyber Cell - {len(accounts)} accounts",
                     accounts=accounts,
                     source_filename=st.session_state.get('filename', ''),
                     progress_callback=update_progress

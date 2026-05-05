@@ -1,5 +1,5 @@
 """
-UI Styling and Theme Configuration for Fraud Analysis Tool
+UI Styling and Theme Configuration for DataLens for Cyber Cell
 Hyper-Premium Midnight Theme with Ultra Smooth Animations
 """
 
