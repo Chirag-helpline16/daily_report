@@ -20,12 +20,7 @@ from src.ui_styling import render_page_header_with_info
 
 def format_excel_professional(excel_buffer):
     """
-    Apply professional formatting to Excel file with vibrant colors and colored headers.
-    
-    Header colors:
-    - First 2 columns: Yellow
-    - Next 3 columns: Green
-    - Remaining columns: Light Red
+    Apply professional formatting to Excel file with vibrant colors.
     
     Args:
         excel_buffer: BytesIO buffer containing Excel file
@@ -37,13 +32,9 @@ def format_excel_professional(excel_buffer):
     wb = load_workbook(excel_buffer)
     ws = wb.active
     
-    # Define header colors
-    yellow_fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")
-    green_fill = PatternFill(start_color="90EE90", end_color="90EE90", fill_type="solid")
-    light_red_fill = PatternFill(start_color="FFB6C1", end_color="FFB6C1", fill_type="solid")
-    
     # Define vibrant styles
-    header_font = Font(name='Calibri', size=12, bold=True, color="000000")  # Black text for colored headers
+    header_font = Font(name='Calibri', size=12, bold=True, color="FFFFFF")
+    header_fill = PatternFill(start_color="0070C0", end_color="0070C0", fill_type="solid")  # Vibrant blue
     
     normal_font = Font(name='Calibri', size=11, color="000000")
     
@@ -62,20 +53,12 @@ def format_excel_professional(excel_buffer):
     center_align = Alignment(horizontal='center', vertical='center', wrap_text=False)
     left_align = Alignment(horizontal='left', vertical='center', wrap_text=False)
     
-    # Format header row (row 1) with colored backgrounds
-    max_col = ws.max_column
-    for col_idx, cell in enumerate(ws[1], start=1):
+    # Format header row (row 1) - Make it stand out
+    for cell in ws[1]:
         cell.font = header_font
+        cell.fill = header_fill
         cell.alignment = center_align
         cell.border = border
-        
-        # Apply colored fills based on column position
-        if col_idx <= 2:
-            cell.fill = yellow_fill
-        elif col_idx <= 5:
-            cell.fill = green_fill
-        else:
-            cell.fill = light_red_fill
     
     # Set header row height - taller for impact
     ws.row_dimensions[1].height = 30
@@ -211,23 +194,25 @@ def render_automated_workflow_page():
             st.markdown("---")
             st.markdown("### 🎯 Step 2: Map Columns to Output Format")
             
-            st.info("📋 Map your file columns to the required output format (13 columns)")
+            st.info("📋 Map your file columns to the required output format (16 columns)")
             
-            # Required output columns (13 columns - removed Victim State)
+            # Required output columns (15 columns - Transaction Amount is ONE column)
             required_columns = [
                 "S No.",
                 "Acknowledgement No.",
-                "Suspect District",
-                "Suspect Account No.",
+                "Victim District",
+                "Victim State",
+                "Reported Amount (Victim)",
+                "Account No.",
                 "IFSC Code",
                 "Address",
+                "District",
+                "State",
                 "Pin Code",
                 "Transaction Amount",
                 "Disputed Amount",
                 "Bank/FIs",
-                "Layers",
-                "Victim District",
-                "Reported Amount (Victim)"
+                "Layers"
             ]
             
             # Initialize session state for column mappings if not exists
@@ -317,33 +302,55 @@ def render_automated_workflow_page():
                     st.session_state.workflow_column_mapping["Acknowledgement No."] = column_mapping["Acknowledgement No."]
                     save_column_mappings(st.session_state.workflow_column_mapping)
                 
-                column_mapping["Suspect District"] = st.selectbox(
-                    "3. Suspect District",
-                    options=["-- Skip --"] + list(layerwise_df.columns),
-                    index=get_col_index("Suspect District", layerwise_df.columns, "District"),
-                    key="map_suspect_dist",
-                    help="From Layerwise file"
+                column_mapping["Victim District"] = st.selectbox(
+                    "3. Victim District",
+                    options=["-- Skip --"] + list(fraud_df.columns),
+                    index=get_col_index("Victim District", fraud_df.columns, "Victim District"),
+                    key="map_vict_dist",
+                    help="From Fraud Amount file"
                 )
-                if column_mapping["Suspect District"] != st.session_state.workflow_column_mapping.get("Suspect District"):
-                    st.session_state.workflow_column_mapping["Suspect District"] = column_mapping["Suspect District"]
+                if column_mapping["Victim District"] != st.session_state.workflow_column_mapping.get("Victim District"):
+                    st.session_state.workflow_column_mapping["Victim District"] = column_mapping["Victim District"]
                     save_column_mappings(st.session_state.workflow_column_mapping)
                 
-                column_mapping["Suspect Account No."] = st.selectbox(
-                    "4. Suspect Account No.",
-                    options=["-- Skip --"] + list(layerwise_df.columns),
-                    index=get_col_index("Suspect Account No.", layerwise_df.columns, "Account No."),
-                    key="map_suspect_account",
-                    help="From Layerwise file"
+                column_mapping["Victim State"] = st.selectbox(
+                    "4. Victim State",
+                    options=["-- Skip --"] + list(fraud_df.columns),
+                    index=get_col_index("Victim State", fraud_df.columns),
+                    key="map_vict_state",
+                    help="From Fraud Amount file"
                 )
-                if column_mapping["Suspect Account No."] != st.session_state.workflow_column_mapping.get("Suspect Account No."):
-                    st.session_state.workflow_column_mapping["Suspect Account No."] = column_mapping["Suspect Account No."]
+                if column_mapping["Victim State"] != st.session_state.workflow_column_mapping.get("Victim State"):
+                    st.session_state.workflow_column_mapping["Victim State"] = column_mapping["Victim State"]
                     save_column_mappings(st.session_state.workflow_column_mapping)
             
             with map_col2:
-                st.markdown("**Columns 5-7:**")
+                st.markdown("**Columns 5-8:**")
+                
+                column_mapping["Reported Amount (Victim)"] = st.selectbox(
+                    "5. Reported Amount",
+                    options=["-- Skip --"] + list(fraud_df.columns),
+                    index=get_col_index("Reported Amount (Victim)", fraud_df.columns, "Amount Reported"),
+                    key="map_amount",
+                    help="From Fraud Amount file"
+                )
+                if column_mapping["Reported Amount (Victim)"] != st.session_state.workflow_column_mapping.get("Reported Amount (Victim)"):
+                    st.session_state.workflow_column_mapping["Reported Amount (Victim)"] = column_mapping["Reported Amount (Victim)"]
+                    save_column_mappings(st.session_state.workflow_column_mapping)
+                
+                column_mapping["Account No."] = st.selectbox(
+                    "6. Account No.",
+                    options=["-- Skip --"] + list(layerwise_df.columns),
+                    index=get_col_index("Account No.", layerwise_df.columns),
+                    key="map_account",
+                    help="From Layerwise file"
+                )
+                if column_mapping["Account No."] != st.session_state.workflow_column_mapping.get("Account No."):
+                    st.session_state.workflow_column_mapping["Account No."] = column_mapping["Account No."]
+                    save_column_mappings(st.session_state.workflow_column_mapping)
                 
                 column_mapping["IFSC Code"] = st.selectbox(
-                    "5. IFSC Code",
+                    "7. IFSC Code",
                     options=["-- Skip --"] + list(layerwise_df.columns),
                     index=get_col_index("IFSC Code", layerwise_df.columns),
                     key="map_ifsc",
@@ -354,7 +361,7 @@ def render_automated_workflow_page():
                     save_column_mappings(st.session_state.workflow_column_mapping)
                 
                 column_mapping["Address"] = st.selectbox(
-                    "6. Address",
+                    "8. Address",
                     options=["-- Skip --"] + list(layerwise_df.columns),
                     index=get_col_index("Address", layerwise_df.columns),
                     key="map_address",
@@ -363,9 +370,34 @@ def render_automated_workflow_page():
                 if column_mapping["Address"] != st.session_state.workflow_column_mapping.get("Address"):
                     st.session_state.workflow_column_mapping["Address"] = column_mapping["Address"]
                     save_column_mappings(st.session_state.workflow_column_mapping)
+            
+            with map_col3:
+                st.markdown("**Columns 9-12:**")
+                
+                column_mapping["District"] = st.selectbox(
+                    "9. District (Suspect)",
+                    options=["-- Skip --"] + list(layerwise_df.columns),
+                    index=get_col_index("District", layerwise_df.columns),
+                    key="map_district",
+                    help="From Layerwise file"
+                )
+                if column_mapping["District"] != st.session_state.workflow_column_mapping.get("District"):
+                    st.session_state.workflow_column_mapping["District"] = column_mapping["District"]
+                    save_column_mappings(st.session_state.workflow_column_mapping)
+                
+                column_mapping["State"] = st.selectbox(
+                    "10. State (Suspect)",
+                    options=["-- Skip --"] + list(layerwise_df.columns),
+                    index=get_col_index("State", layerwise_df.columns, "State"),
+                    key="map_state",
+                    help="From Layerwise file"
+                )
+                if column_mapping["State"] != st.session_state.workflow_column_mapping.get("State"):
+                    st.session_state.workflow_column_mapping["State"] = column_mapping["State"]
+                    save_column_mappings(st.session_state.workflow_column_mapping)
                 
                 column_mapping["Pin Code"] = st.selectbox(
-                    "7. Pin Code",
+                    "11. Pin Code",
                     options=["-- Skip --"] + list(layerwise_df.columns),
                     index=get_col_index("Pin Code", layerwise_df.columns),
                     key="map_pin",
@@ -374,23 +406,23 @@ def render_automated_workflow_page():
                 if column_mapping["Pin Code"] != st.session_state.workflow_column_mapping.get("Pin Code"):
                     st.session_state.workflow_column_mapping["Pin Code"] = column_mapping["Pin Code"]
                     save_column_mappings(st.session_state.workflow_column_mapping)
-            
-            with map_col3:
-                st.markdown("**Columns 8-10:**")
                 
                 column_mapping["Transaction Amount"] = st.selectbox(
-                    "8. Transaction Amount",
+                    "12. Transaction Amount",
                     options=["-- Skip --"] + list(layerwise_df.columns),
                     index=get_col_index("Transaction Amount", layerwise_df.columns),
                     key="map_transaction_amount",
-                    help="From Layerwise file"
+                    help="From Layerwise file (Transaction Amount in one column)"
                 )
                 if column_mapping["Transaction Amount"] != st.session_state.workflow_column_mapping.get("Transaction Amount"):
                     st.session_state.workflow_column_mapping["Transaction Amount"] = column_mapping["Transaction Amount"]
                     save_column_mappings(st.session_state.workflow_column_mapping)
+            
+            with map_col4:
+                st.markdown("**Columns 13-15:**")
                 
                 column_mapping["Disputed Amount"] = st.selectbox(
-                    "9. Disputed Amount",
+                    "13. Disputed Amount",
                     options=["-- Skip --"] + list(layerwise_df.columns),
                     index=get_col_index("Disputed Amount", layerwise_df.columns),
                     key="map_disputed",
@@ -401,7 +433,7 @@ def render_automated_workflow_page():
                     save_column_mappings(st.session_state.workflow_column_mapping)
                 
                 column_mapping["Bank/FIs"] = st.selectbox(
-                    "10. Bank/FIs",
+                    "14. Bank/FIs",
                     options=["-- Skip --"] + list(layerwise_df.columns),
                     index=get_col_index("Bank/FIs", layerwise_df.columns),
                     key="map_bank",
@@ -410,42 +442,12 @@ def render_automated_workflow_page():
                 if column_mapping["Bank/FIs"] != st.session_state.workflow_column_mapping.get("Bank/FIs"):
                     st.session_state.workflow_column_mapping["Bank/FIs"] = column_mapping["Bank/FIs"]
                     save_column_mappings(st.session_state.workflow_column_mapping)
-            
-            with map_col4:
-                st.markdown("**Columns 11-13:**")
                 
                 column_mapping["Layers"] = st.selectbox(
-                    "11. Layers",
+                    "15. Layers",
                     options=["-- Skip --"] + list(layerwise_df.columns),
                     index=get_col_index("Layers", layerwise_df.columns),
                     key="map_layers",
-                    help="From Layerwise file"
-                )
-                if column_mapping["Layers"] != st.session_state.workflow_column_mapping.get("Layers"):
-                    st.session_state.workflow_column_mapping["Layers"] = column_mapping["Layers"]
-                    save_column_mappings(st.session_state.workflow_column_mapping)
-                
-                column_mapping["Victim District"] = st.selectbox(
-                    "12. Victim District",
-                    options=["-- Skip --"] + list(fraud_df.columns),
-                    index=get_col_index("Victim District", fraud_df.columns, "Victim District"),
-                    key="map_vict_dist",
-                    help="From Fraud Amount file"
-                )
-                if column_mapping["Victim District"] != st.session_state.workflow_column_mapping.get("Victim District"):
-                    st.session_state.workflow_column_mapping["Victim District"] = column_mapping["Victim District"]
-                    save_column_mappings(st.session_state.workflow_column_mapping)
-                
-                column_mapping["Reported Amount (Victim)"] = st.selectbox(
-                    "13. Reported Amount (Victim)",
-                    options=["-- Skip --"] + list(fraud_df.columns),
-                    index=get_col_index("Reported Amount (Victim)", fraud_df.columns, "Amount Reported"),
-                    key="map_amount",
-                    help="From Fraud Amount file"
-                )
-                if column_mapping["Reported Amount (Victim)"] != st.session_state.workflow_column_mapping.get("Reported Amount (Victim)"):
-                    st.session_state.workflow_column_mapping["Reported Amount (Victim)"] = column_mapping["Reported Amount (Victim)"]
-                    save_column_mappings(st.session_state.workflow_column_mapping)
                     help="From Layerwise file"
                 )
                 if column_mapping["Layers"] != st.session_state.workflow_column_mapping.get("Layers"):
@@ -499,10 +501,10 @@ def render_automated_workflow_page():
                     st.success(f"✅ Matched {len(matched_df):,} records from Layerwise file (master)")
                     progress_bar.progress(15)
                     
-                    # STEP 2: Build output with ONLY required 13 columns in exact order
+                    # STEP 2: Build output with ONLY required 15 columns in exact order
                     status_text.text("Step 2/5: Building output columns...")
                     
-                    # Create new dataframe with only required columns in NEW ORDER
+                    # Create new dataframe with only required columns
                     output_df = pd.DataFrame()
                     
                     # 1. S No. - Will be added later per file
@@ -517,33 +519,41 @@ def render_automated_workflow_page():
                     else:
                         output_df["Acknowledgement No."] = ""
                     
-                    # 3. Suspect District (from Layerwise file)
-                    suspect_dist_col = column_mapping.get("Suspect District", "-- Skip --")
-                    if suspect_dist_col != "-- Skip --":
-                        if suspect_dist_col in matched_df.columns:
-                            output_df["Suspect District"] = matched_df[suspect_dist_col]
-                        elif f"{suspect_dist_col}_suspect" in matched_df.columns:
-                            output_df["Suspect District"] = matched_df[f"{suspect_dist_col}_suspect"]
+                    # 3. Victim District (from Fraud file)
+                    if district_col != "-- Skip --":
+                        if district_col in matched_df.columns:
+                            output_df["Victim District"] = matched_df[district_col]
+                        elif f"{district_col}_victim" in matched_df.columns:
+                            output_df["Victim District"] = matched_df[f"{district_col}_victim"]
                     else:
-                        output_df["Suspect District"] = ""
+                        output_df["Victim District"] = ""
                     
-                    # 4. Suspect Account No. (from Layerwise file)
-                    suspect_acc_col = column_mapping.get("Suspect Account No.", "-- Skip --")
-                    if suspect_acc_col != "-- Skip --":
-                        if suspect_acc_col in matched_df.columns:
-                            output_df["Suspect Account No."] = matched_df[suspect_acc_col]
-                        elif f"{suspect_acc_col}_suspect" in matched_df.columns:
-                            output_df["Suspect Account No."] = matched_df[f"{suspect_acc_col}_suspect"]
+                    # 4. Victim State (from Fraud file)
+                    vict_state_col = column_mapping.get("Victim State", "-- Skip --")
+                    if vict_state_col != "-- Skip --":
+                        if vict_state_col in matched_df.columns:
+                            output_df["Victim State"] = matched_df[vict_state_col]
+                        elif f"{vict_state_col}_victim" in matched_df.columns:
+                            output_df["Victim State"] = matched_df[f"{vict_state_col}_victim"]
                     else:
-                        output_df["Suspect Account No."] = ""
+                        output_df["Victim State"] = ""
                     
-                    # 5-11: Map remaining columns from Layerwise file
-                    layerwise_cols = [
-                        "IFSC Code", "Address", "Pin Code", "Transaction Amount", 
-                        "Disputed Amount", "Bank/FIs", "Layers"
+                    # 5. Reported Amount (Victim) (from Fraud file)
+                    if amount_col != "-- Skip --":
+                        if amount_col in matched_df.columns:
+                            output_df["Reported Amount (Victim)"] = matched_df[amount_col]
+                        elif f"{amount_col}_victim" in matched_df.columns:
+                            output_df["Reported Amount (Victim)"] = matched_df[f"{amount_col}_victim"]
+                    else:
+                        output_df["Reported Amount (Victim)"] = ""
+                    
+                    # 6-15: Map remaining columns from Layerwise file
+                    remaining_cols = [
+                        "Account No.", "IFSC Code", "Address", "District", "State",
+                        "Pin Code", "Transaction Amount", "Disputed Amount", "Bank/FIs", "Layers"
                     ]
                     
-                    for col_name in layerwise_cols:
+                    for col_name in remaining_cols:
                         source_col = column_mapping.get(col_name, "-- Skip --")
                         if source_col != "-- Skip --":
                             if source_col in matched_df.columns:
@@ -555,31 +565,12 @@ def render_automated_workflow_page():
                         else:
                             output_df[col_name] = ""
                     
-                    # 12. Victim District (from Fraud file)
-                    if district_col != "-- Skip --":
-                        if district_col in matched_df.columns:
-                            output_df["Victim District"] = matched_df[district_col]
-                        elif f"{district_col}_victim" in matched_df.columns:
-                            output_df["Victim District"] = matched_df[f"{district_col}_victim"]
-                    else:
-                        output_df["Victim District"] = ""
+                    # Store state and amount columns for filtering
+                    state_column = "State"  # Column 10 in output
+                    amount_column = "Reported Amount (Victim)"  # Column 5 in output
+                    district_column = "Victim District"  # Column 3 in output
                     
-                    # 13. Reported Amount (Victim) (from Fraud file)
-                    if amount_col != "-- Skip --":
-                        if amount_col in matched_df.columns:
-                            output_df["Reported Amount (Victim)"] = matched_df[amount_col]
-                        elif f"{amount_col}_victim" in matched_df.columns:
-                            output_df["Reported Amount (Victim)"] = matched_df[f"{amount_col}_victim"]
-                    else:
-                        output_df["Reported Amount (Victim)"] = ""
-                    
-                    # Store columns for filtering (using new names)
-                    suspect_district_column = "Suspect District"  # Column 3 in output
-                    amount_column = "Reported Amount (Victim)"  # Column 13 in output
-                    victim_district_column = "Victim District"  # Column 12 in output
-                    district_column = "Victim District"  # For ZIP file splitting by victim district
-                    
-                    st.success(f"✅ Built output with 13 required columns in new order")
+                    st.success(f"✅ Built output with 15 required columns")
                     progress_bar.progress(20)
                     
                     # FILTER: Only keep records where ACK starts with "311"
@@ -635,14 +626,14 @@ def render_automated_workflow_page():
                     # File 1: All Matched Data
                     file1_all = output_df.copy()
                     
-                    # File 2: Gujarat Only (using Suspect District)
-                    file2_gujarat = output_df[output_df[suspect_district_column].astype(str).str.upper().str.contains('GUJARAT|AHMEDABAD|SURAT|VADODARA|RAJKOT', na=False)].copy()
+                    # File 2: Gujarat Only
+                    file2_gujarat = output_df[output_df[state_column].astype(str).str.upper().str.contains('GUJARAT|GUJRAT|GUJ', na=False)].copy()
                     
                     # File 3: 5 Lacs Plus (Amount >= 500000)
                     file3_5lacs = output_df[output_df[amount_column] >= 500000].copy()
                     
                     # File 4: Gujarat 5 Lacs Plus
-                    file4_gujarat_5lacs = file3_5lacs[file3_5lacs[suspect_district_column].astype(str).str.upper().str.contains('GUJARAT|AHMEDABAD|SURAT|VADODARA|RAJKOT', na=False)].copy()
+                    file4_gujarat_5lacs = file3_5lacs[file3_5lacs[state_column].astype(str).str.upper().str.contains('GUJARAT|GUJRAT|GUJ', na=False)].copy()
                     
                     # Debug: Show filtering results
                     with st.expander("🔍 Debug: Filtering Results"):
@@ -650,7 +641,7 @@ def render_automated_workflow_page():
                         if len(file3_5lacs) > 0:
                             st.write(f"**Amount Range in 5L+ data:** ₹{file3_5lacs[amount_column].min():,.2f} to ₹{file3_5lacs[amount_column].max():,.2f}")
                             st.write(f"**Sample 5L+ records:**")
-                            st.dataframe(file3_5lacs[[suspect_district_column, amount_column]].head(10))
+                            st.dataframe(file3_5lacs[[state_column, amount_column]].head(10))
                         else:
                             st.warning("⚠️ No records found with Amount >= 5,00,000")
                             st.write(f"**This might indicate:**")
@@ -661,7 +652,7 @@ def render_automated_workflow_page():
                     st.success(f"✅ File 1 (All): {len(file1_all):,} | File 2 (Gujarat): {len(file2_gujarat):,} | File 3 (5L+): {len(file3_5lacs):,} | File 4 (Guj 5L+): {len(file4_gujarat_5lacs):,}")
                     
                     # Show unique account counts for all files
-                    account_col_name = "Suspect Account No."
+                    account_col_name = "Account No."
                     if account_col_name in file1_all.columns:
                         st.markdown("#### 📊 Unique Account Statistics")
                         
@@ -702,10 +693,10 @@ def render_automated_workflow_page():
                     status_text.text("Step 4/4: Filtering Non-Gujarat data...")
                     
                     # File 5: Non-Gujarat (from File 1)
-                    file5_non_guj = file1_all[~file1_all[suspect_district_column].astype(str).str.upper().str.contains('GUJARAT|AHMEDABAD|SURAT|VADODARA|RAJKOT', na=False)].copy()
+                    file5_non_guj = file1_all[~file1_all[state_column].astype(str).str.upper().str.contains('GUJARAT|GUJRAT|GUJ', na=False)].copy()
                     
                     # File 6: Non-Gujarat 5 Lacs Plus (from File 3)
-                    file6_non_guj_5lacs = file3_5lacs[~file3_5lacs[suspect_district_column].astype(str).str.upper().str.contains('GUJARAT|AHMEDABAD|SURAT|VADODARA|RAJKOT', na=False)].copy()
+                    file6_non_guj_5lacs = file3_5lacs[~file3_5lacs[state_column].astype(str).str.upper().str.contains('GUJARAT|GUJRAT|GUJ', na=False)].copy()
                     
                     st.success(f"✅ File 5 (Non-Guj): {len(file5_non_guj):,} | File 6 (Non-Guj 5L+): {len(file6_non_guj_5lacs):,}")
                     
@@ -781,10 +772,11 @@ def render_automated_workflow_page():
                         
                         # Calculate Top 5 Suspect Districts from layerwise data (Gujarat only, by transaction count)
                         suspect_district_counts = {}
-                        suspect_district_col = "Suspect District"  # Column 3 in output
-                        if suspect_district_col in output_df.columns and len(output_df) > 0:
-                            # Filter for Gujarat districts only
-                            gujarat_data = output_df[output_df[suspect_district_col].astype(str).str.upper().str.contains('GUJARAT|AHMEDABAD|SURAT|VADODARA|RAJKOT|GANDHINAGAR|BHAVNAGAR|JAMNAGAR', na=False)].copy()
+                        suspect_district_col = "District"  # Column 9 in output (Suspect District)
+                        suspect_state_col = "State"  # Column 10 in output (Suspect State)
+                        if suspect_district_col in output_df.columns and suspect_state_col in output_df.columns and len(output_df) > 0:
+                            # Filter for Gujarat state only
+                            gujarat_data = output_df[output_df[suspect_state_col].astype(str).str.upper().str.contains('GUJARAT|GUJRAT|GUJ', na=False)].copy()
                             
                             if len(gujarat_data) > 0:
                                 # Clean district names
