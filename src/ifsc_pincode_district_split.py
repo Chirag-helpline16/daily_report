@@ -13,9 +13,56 @@ import re
 import requests
 import time
 from src.persistent_mapping import PersistentMapping
+from openpyxl import load_workbook
+from openpyxl.styles import PatternFill
 
 # Free IFSC API endpoint
 IFSC_API_URL = "https://ifsc.razorpay.com/"
+
+
+def apply_header_colors(buffer):
+    """
+    Apply colored headers to Excel file in buffer.
+    - First 2 columns: Yellow
+    - Next 3 columns: Green
+    - Remaining columns: Light Red
+    
+    Args:
+        buffer: BytesIO buffer containing Excel file
+        
+    Returns:
+        BytesIO buffer with colored headers
+    """
+    buffer.seek(0)
+    wb = load_workbook(buffer)
+    
+    # Define colors
+    yellow_fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")
+    green_fill = PatternFill(start_color="90EE90", end_color="90EE90", fill_type="solid")
+    light_red_fill = PatternFill(start_color="FFB6C1", end_color="FFB6C1", fill_type="solid")
+    
+    # Apply colors to all sheets
+    for ws in wb.worksheets:
+        # Get number of columns
+        max_col = ws.max_column
+        
+        # First 2 columns: Yellow
+        for col in range(1, min(3, max_col + 1)):
+            ws.cell(row=1, column=col).fill = yellow_fill
+        
+        # Next 3 columns: Green
+        for col in range(3, min(6, max_col + 1)):
+            ws.cell(row=1, column=col).fill = green_fill
+        
+        # Remaining columns: Light Red
+        for col in range(6, max_col + 1):
+            ws.cell(row=1, column=col).fill = light_red_fill
+    
+    # Save to new buffer
+    output_buffer = BytesIO()
+    wb.save(output_buffer)
+    output_buffer.seek(0)
+    return output_buffer
 
 # PIN Code to District mapping for Gujarat (verified accurate)
 PINCODE_TO_DISTRICT = {
@@ -1147,6 +1194,9 @@ def render_ifsc_pincode_district_split_page():
                                     # Create Excel file
                                     excel_buffer = BytesIO()
                                     clean_df.to_excel(excel_buffer, index=False, engine='openpyxl')
+                                    
+                                    # Apply colored headers
+                                    excel_buffer = apply_header_colors(excel_buffer)
                                     excel_buffer.seek(0)
                                     
                                     # Add to ZIP
@@ -1189,6 +1239,8 @@ def render_ifsc_pincode_district_split_page():
                                     sheet_name = district[:31]
                                     clean_df.to_excel(writer, sheet_name=sheet_name, index=False)
                             
+                            # Apply colored headers to all sheets
+                            excel_buffer = apply_header_colors(excel_buffer)
                             excel_buffer.seek(0)
                             
                             # Download button

@@ -85,28 +85,65 @@ class ReportGenerator:
         filepath: str
     ) -> None:
         """
-        Generate summary Excel file from aggregated accounts.
+        Generate summary Excel file from aggregated accounts with colored headers.
         
         Creates an Excel file with columns: Fraudster Bank Account Number,
         Bank Name, IFSC Code, Address, Total Transactions, 
         All Acknowledgement Numbers, Total Amount, Total Disputed Amount, Risk Score.
         
+        Header colors:
+        - First 2 columns: Yellow
+        - Next 3 columns: Green
+        - Remaining columns: Light Red
+        
         Args:
             accounts: List of AggregatedAccount objects to export.
             filepath: Path where the Excel file should be saved.
         """
+        from openpyxl import load_workbook
+        from openpyxl.styles import PatternFill
+        
         df = self._accounts_to_dataframe(accounts)
         # Ensure account number is stored as string to preserve leading zeros
         if "Fraudster Bank Account Number" in df.columns:
             df["Fraudster Bank Account Number"] = df["Fraudster Bank Account Number"].astype(str)
         df.to_excel(filepath, index=False, engine='openpyxl')
+        
+        # Apply header colors
+        wb = load_workbook(filepath)
+        ws = wb.active
+        
+        # Define colors
+        yellow_fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")
+        green_fill = PatternFill(start_color="90EE90", end_color="90EE90", fill_type="solid")
+        light_red_fill = PatternFill(start_color="FFB6C1", end_color="FFB6C1", fill_type="solid")
+        
+        # Apply colors to header row (row 1)
+        # First 2 columns: Yellow
+        for col in range(1, 3):
+            ws.cell(row=1, column=col).fill = yellow_fill
+        
+        # Next 3 columns: Green
+        for col in range(3, 6):
+            ws.cell(row=1, column=col).fill = green_fill
+        
+        # Remaining columns: Light Red
+        for col in range(6, len(self.OUTPUT_COLUMNS) + 1):
+            ws.cell(row=1, column=col).fill = light_red_fill
+        
+        wb.save(filepath)
     
     def generate_excel_bytes(
         self, 
         accounts: List[AggregatedAccount]
     ) -> bytes:
         """
-        Generate summary Excel file as bytes (for streaming downloads).
+        Generate summary Excel file as bytes (for streaming downloads) with colored headers.
+        
+        Header colors:
+        - First 2 columns: Yellow
+        - Next 3 columns: Green
+        - Remaining columns: Light Red
         
         Args:
             accounts: List of AggregatedAccount objects to export.
@@ -114,11 +151,41 @@ class ReportGenerator:
         Returns:
             Excel file content as bytes.
         """
+        from openpyxl import load_workbook
+        from openpyxl.styles import PatternFill
+        
         df = self._accounts_to_dataframe(accounts)
         buffer = io.BytesIO()
         df.to_excel(buffer, index=False, engine='openpyxl')
         buffer.seek(0)
-        return buffer.getvalue()
+        
+        # Load workbook to apply colors
+        wb = load_workbook(buffer)
+        ws = wb.active
+        
+        # Define colors
+        yellow_fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")
+        green_fill = PatternFill(start_color="90EE90", end_color="90EE90", fill_type="solid")
+        light_red_fill = PatternFill(start_color="FFB6C1", end_color="FFB6C1", fill_type="solid")
+        
+        # Apply colors to header row (row 1)
+        # First 2 columns: Yellow
+        for col in range(1, 3):
+            ws.cell(row=1, column=col).fill = yellow_fill
+        
+        # Next 3 columns: Green
+        for col in range(3, 6):
+            ws.cell(row=1, column=col).fill = green_fill
+        
+        # Remaining columns: Light Red
+        for col in range(6, len(self.OUTPUT_COLUMNS) + 1):
+            ws.cell(row=1, column=col).fill = light_red_fill
+        
+        # Save to buffer
+        output_buffer = io.BytesIO()
+        wb.save(output_buffer)
+        output_buffer.seek(0)
+        return output_buffer.getvalue()
     
     def generate_csv(
         self, 
