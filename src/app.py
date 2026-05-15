@@ -62,6 +62,7 @@ from src.automated_workflow import render_automated_workflow_page
 from src.ui_styling import apply_custom_css, render_page_header_with_info
 from src.smart_district_split import render_smart_district_split_page
 from src.ifsc_pincode_district_split import render_ifsc_pincode_district_split_page
+from src.daily_report_district_split import render_daily_report_district_split_page
 from src.distinct_account_pivot import render_distinct_account_pivot_page
 from src.top_10_suspect_accounts import render_top_10_suspect_accounts_page
 from src.pinned_pages import (
@@ -167,7 +168,12 @@ def render_sidebar():
             'distinct_account_pivot': '📊 Distinct Account Pivot',
             'view_database': '🗄️ View Database'
         }
-        
+        pages = dict(
+            list(pages.items())[:6]
+            + [('daily_report_district_split', 'Daily Report District Split')]
+            + list(pages.items())[6:]
+        )
+
         clean_page_names = {
             'upload': 'Aggregate by Account',
             'district_download': 'Victim-Suspect Mapping',
@@ -199,6 +205,8 @@ def render_sidebar():
             'distinct_account_pivot': 'Distinct Account Pivot',
             'view_database': 'View Database'
         }
+
+        clean_page_names['daily_report_district_split'] = 'Daily Report District Split'
 
         valid_page_keys = list(pages.keys())
 
@@ -1850,6 +1858,8 @@ def main():
         render_smart_district_split_page()
     elif page == 'ifsc_pincode_split':
         render_ifsc_pincode_district_split_page()
+    elif page == 'daily_report_district_split':
+        render_daily_report_district_split_page()
     elif page == 'filter_by_entry_count':
         render_filter_by_entry_count_page()
     elif page == 'filter_by_unique_ack':

@@ -1234,6 +1234,7 @@ def apply_custom_css():
     [class*="st-key-nav_excel_merger"] button,
     [class*="st-key-nav_drop_call_finder"] button,
     [class*="st-key-nav_mo_finder"] button,
+    [class*="st-key-nav_daily_report_district_split"] button,
     [class*="st-key-nav_ack_bank_consolidator"] button {
         border-left: 3px solid var(--intel-blue) !important;
     }
@@ -1282,6 +1283,7 @@ def apply_custom_css():
     [class*="st-key-pin_nav_excel_merger"],
     [class*="st-key-pin_nav_drop_call_finder"],
     [class*="st-key-pin_nav_mo_finder"],
+    [class*="st-key-pin_nav_daily_report_district_split"],
     [class*="st-key-pin_nav_ack_bank_consolidator"] {
         --pin-accent: var(--intel-blue);
         --pin-accent-bg: rgba(47, 128, 255, 0.16);
@@ -1860,6 +1862,7 @@ def apply_custom_css():
     [class*="st-key-nav_excel_merger"] button,
     [class*="st-key-nav_drop_call_finder"] button,
     [class*="st-key-nav_mo_finder"] button,
+    [class*="st-key-nav_daily_report_district_split"] button,
     [class*="st-key-nav_ack_bank_consolidator"] button {
         border-left-color: var(--intel-blue) !important;
         box-shadow: inset 3px 0 0 var(--intel-blue) !important;
@@ -1872,6 +1875,7 @@ def apply_custom_css():
     [class*="st-key-nav_excel_merger"],
     [class*="st-key-nav_drop_call_finder"],
     [class*="st-key-nav_mo_finder"],
+    [class*="st-key-nav_daily_report_district_split"],
     [class*="st-key-nav_ack_bank_consolidator"] {
         border-left: 3px solid var(--intel-blue) !important;
         border-radius: 6px !important;
