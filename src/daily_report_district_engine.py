@@ -740,6 +740,8 @@ def dataframe_to_excel_bytes(rows: list[dict[str, Any]], columns: list[str] | No
     df = pd.DataFrame(rows)
     if columns:
         df = df.reindex(columns=columns)
+    if "S No." in df.columns:
+        df["S No."] = range(1, len(df) + 1)
 
     with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
         df.to_excel(writer, index=False, sheet_name="Data")
