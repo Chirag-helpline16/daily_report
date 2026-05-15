@@ -1230,6 +1230,8 @@ def apply_custom_css():
     [class*="st-key-nav_filter_by_entry_count"] button,
     [class*="st-key-nav_report_generator"] button,
     [class*="st-key-nav_excel_merger"] button,
+    [class*="st-key-nav_drop_call_finder"] button,
+    [class*="st-key-nav_mo_finder"] button,
     [class*="st-key-nav_ack_bank_consolidator"] button {
         border-left: 3px solid var(--intel-blue) !important;
     }
@@ -1239,6 +1241,7 @@ def apply_custom_css():
     [class*="st-key-nav_non_gujarat_filter"] button,
     [class*="st-key-nav_ack_list_pivot"] button,
     [class*="st-key-nav_column_selector"] button,
+    [class*="st-key-nav_csv_fixer"] button,
     [class*="st-key-nav_disputed_amount_matcher"] button,
     [class*="st-key-nav_money_transfer_dispute"] button,
     [class*="st-key-nav_mysql_database_viewer"] button,
@@ -1695,6 +1698,8 @@ def apply_custom_css():
     [class*="st-key-nav_filter_by_entry_count"] button,
     [class*="st-key-nav_report_generator"] button,
     [class*="st-key-nav_excel_merger"] button,
+    [class*="st-key-nav_drop_call_finder"] button,
+    [class*="st-key-nav_mo_finder"] button,
     [class*="st-key-nav_ack_bank_consolidator"] button {
         border-left-color: var(--intel-blue) !important;
         box-shadow: inset 3px 0 0 var(--intel-blue) !important;
@@ -1704,6 +1709,8 @@ def apply_custom_css():
     [class*="st-key-nav_filter_by_entry_count"],
     [class*="st-key-nav_report_generator"],
     [class*="st-key-nav_excel_merger"],
+    [class*="st-key-nav_drop_call_finder"],
+    [class*="st-key-nav_mo_finder"],
     [class*="st-key-nav_ack_bank_consolidator"] {
         border-left: 3px solid var(--intel-blue) !important;
         border-radius: 6px !important;
@@ -1714,6 +1721,7 @@ def apply_custom_css():
     [class*="st-key-nav_non_gujarat_filter"] button,
     [class*="st-key-nav_ack_list_pivot"] button,
     [class*="st-key-nav_column_selector"] button,
+    [class*="st-key-nav_csv_fixer"] button,
     [class*="st-key-nav_disputed_amount_matcher"] button,
     [class*="st-key-nav_money_transfer_dispute"] button,
     [class*="st-key-nav_mysql_database_viewer"] button,
@@ -1727,6 +1735,7 @@ def apply_custom_css():
     [class*="st-key-nav_non_gujarat_filter"],
     [class*="st-key-nav_ack_list_pivot"],
     [class*="st-key-nav_column_selector"],
+    [class*="st-key-nav_csv_fixer"],
     [class*="st-key-nav_disputed_amount_matcher"],
     [class*="st-key-nav_money_transfer_dispute"],
     [class*="st-key-nav_mysql_database_viewer"],
@@ -1753,6 +1762,13 @@ def apply_custom_css():
         min-height: 38px !important;
         line-height: 1.25 !important;
         white-space: normal !important;
+    }
+
+    .stDownloadButton button *,
+    .stDownloadButton button p,
+    .stDownloadButton button span,
+    .stDownloadButton button div {
+        color: #090C12 !important;
     }
 
     div[data-testid="stMetric"],

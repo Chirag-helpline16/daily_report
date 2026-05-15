@@ -47,6 +47,9 @@ from src.report_service import ReportService
 from src.districtwise import render_districtwise_page
 from src.non_gujarat_filter import render_non_gujarat_filter_page
 from src.column_selector import render_column_selector_page
+from src.csv_fixer import render_csv_fixer_page
+from src.drop_call_finder import render_drop_call_finder_page
+from src.mo_finder import render_mo_finder_page
 from src.amount_matcher import render_amount_matcher_page
 from src.bank_ack_pivot import render_bank_ack_pivot_page
 from src.ack_list_pivot import render_ack_list_pivot_page
@@ -143,7 +146,10 @@ def render_sidebar():
             'report_generator': '📊 Account & Hold Amount Report Generator',
             'automated_workflow': '🔄 Automated Workflow',
             'column_selector': '📋 Filter Excel File with the Columns You Need',
+            'csv_fixer': 'CSV Fixer',
             'excel_merger': '📎 Merge Excel Files',
+            'drop_call_finder': 'Drop Call Finder',
+            'mo_finder': 'MO Finder',
             'call_notice_merge': '📞 Call Notice Data Mapping for Time Difference Between Call and Notice',
             'transaction_matcher': '🔄 Bring Disputed Amount to Unattended File (From Status-Wise Report)',
             'disputed_amount_matcher': '💰 Bring Disputed Amount to Any File with ACK No., Account Number & Transaction Amount',
@@ -172,7 +178,10 @@ def render_sidebar():
             'report_generator': 'Account & Hold Report',
             'automated_workflow': 'Automated Workflow',
             'column_selector': 'Column Selector',
+            'csv_fixer': 'CSV Fixer',
             'excel_merger': 'Merge Excel Files',
+            'drop_call_finder': 'Drop Call Finder',
+            'mo_finder': 'MO Finder',
             'call_notice_merge': 'Call Notice Mapping',
             'transaction_matcher': 'Transaction Matcher',
             'disputed_amount_matcher': 'ACK Account Matcher',
@@ -1781,8 +1790,14 @@ def main():
         render_automated_workflow_page()
     elif page == 'column_selector':
         render_column_selector_page()
+    elif page == 'csv_fixer':
+        render_csv_fixer_page()
     elif page == 'excel_merger':
         render_merge_files_page()
+    elif page == 'drop_call_finder':
+        render_drop_call_finder_page()
+    elif page == 'mo_finder':
+        render_mo_finder_page()
     elif page == 'call_notice_merge':
         render_call_notice_merge_page()
     elif page == 'transaction_matcher':
