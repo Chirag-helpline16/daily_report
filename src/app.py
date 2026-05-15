@@ -64,6 +64,12 @@ from src.smart_district_split import render_smart_district_split_page
 from src.ifsc_pincode_district_split import render_ifsc_pincode_district_split_page
 from src.distinct_account_pivot import render_distinct_account_pivot_page
 from src.top_10_suspect_accounts import render_top_10_suspect_accounts_page
+from src.pinned_pages import (
+    MAX_PINNED_PAGES,
+    load_pinned_pages,
+    normalize_pinned_pages,
+    save_pinned_pages,
+)
 
 # Page configuration
 st.set_page_config(
@@ -194,8 +200,80 @@ def render_sidebar():
             'view_database': 'View Database'
         }
 
+        valid_page_keys = list(pages.keys())
+
+        def page_label(page_key):
+            return clean_page_names.get(page_key, pages.get(page_key, page_key))
+
+        def persist_pinned_pages(page_keys):
+            saved_pages = save_pinned_pages(page_keys, valid_page_keys)
+            st.session_state.pinned_pages = saved_pages
+            return saved_pages
+
+        def sidebar_section_title(title, detail=None):
+            detail_html = f'<span>{detail}</span>' if detail else ''
+            st.markdown(
+                f'<div class="sidebar-section-title">{title}{detail_html}</div>',
+                unsafe_allow_html=True,
+            )
+
+        if 'pinned_pages' not in st.session_state:
+            st.session_state.pinned_pages = load_pinned_pages(valid_page_keys)
+        else:
+            st.session_state.pinned_pages = normalize_pinned_pages(
+                st.session_state.pinned_pages,
+                valid_page_keys
+            )
+
+        pinned_pages = st.session_state.pinned_pages
+        current_page = st.session_state.current_page
+        current_is_pinned = current_page in pinned_pages
+        pin_limit_reached = len(pinned_pages) >= MAX_PINNED_PAGES
+
+        sidebar_section_title("Quick Pins", f"{len(pinned_pages)}/{MAX_PINNED_PAGES}")
+        if current_is_pinned:
+            if st.button("Unpin Page", key="unpin_current_page", use_container_width=True):
+                persist_pinned_pages(page for page in pinned_pages if page != current_page)
+                st.rerun()
+        else:
+            if st.button(
+                "Pin Page",
+                key="pin_current_page",
+                use_container_width=True,
+                disabled=pin_limit_reached,
+            ):
+                persist_pinned_pages([*pinned_pages, current_page])
+                st.rerun()
+            if pin_limit_reached:
+                st.caption("Pin limit reached. Unpin one page to add another.")
+
+        if st.checkbox("Manage pins", key="show_pin_manager"):
+            picker_key = "pinned_pages_picker_" + ("_".join(pinned_pages) or "empty")
+            selected_pins = st.multiselect(
+                "Choose up to 10 pinned pages",
+                options=valid_page_keys,
+                default=pinned_pages,
+                format_func=page_label,
+                max_selections=MAX_PINNED_PAGES,
+                key=picker_key,
+            )
+            if selected_pins != pinned_pages:
+                persist_pinned_pages(selected_pins)
+                st.rerun()
+
+        if pinned_pages:
+            sidebar_section_title("Pinned Pages")
+            for page_key in pinned_pages:
+                if st.button(page_label(page_key), key=f"pin_nav_{page_key}", use_container_width=True):
+                    st.session_state.current_page = page_key
+                    st.rerun()
+            st.markdown("---")
+
+        sidebar_section_title("All Pages")
         for page_key, page_name in pages.items():
-            page_name = clean_page_names.get(page_key, page_name)
+            if page_key in pinned_pages:
+                continue
+            page_name = page_label(page_key)
             if st.button(page_name, key=f"nav_{page_key}", use_container_width=True):
                 st.session_state.current_page = page_key
                 st.rerun()

@@ -1221,6 +1221,7 @@ def apply_custom_css():
     [class*="st-key-nav_district_download"] button,
     [class*="st-key-nav_ifsc_pincode_split"] button,
     [class*="st-key-nav_bank_ack_pivot"] button,
+    [class*="st-key-nav_call_notice_merge"] button,
     [class*="st-key-nav_bulk_mysql_import"] button,
     [class*="st-key-nav_ai_sql_assistant"] button {
         border-left: 3px solid var(--intel-amber) !important;
@@ -1229,6 +1230,7 @@ def apply_custom_css():
     [class*="st-key-nav_districtwise"] button,
     [class*="st-key-nav_filter_by_entry_count"] button,
     [class*="st-key-nav_report_generator"] button,
+    [class*="st-key-nav_automated_workflow"] button,
     [class*="st-key-nav_excel_merger"] button,
     [class*="st-key-nav_drop_call_finder"] button,
     [class*="st-key-nav_mo_finder"] button,
@@ -1247,6 +1249,62 @@ def apply_custom_css():
     [class*="st-key-nav_mysql_database_viewer"] button,
     [class*="st-key-nav_distinct_account_pivot"] button {
         border-left: 3px solid var(--intel-green) !important;
+    }
+
+    [class*="st-key-pin_nav_"] {
+        --pin-accent: var(--intel-amber);
+        --pin-accent-bg: rgba(255, 159, 10, 0.16);
+    }
+
+    [class*="st-key-pin_nav_upload"],
+    [class*="st-key-pin_nav_top_10_suspect"],
+    [class*="st-key-pin_nav_amount_matcher"],
+    [class*="st-key-pin_nav_transaction_matcher"],
+    [class*="st-key-pin_nav_view_database"] {
+        --pin-accent: var(--intel-red);
+        --pin-accent-bg: rgba(240, 67, 72, 0.16);
+    }
+
+    [class*="st-key-pin_nav_district_download"],
+    [class*="st-key-pin_nav_ifsc_pincode_split"],
+    [class*="st-key-pin_nav_bank_ack_pivot"],
+    [class*="st-key-pin_nav_call_notice_merge"],
+    [class*="st-key-pin_nav_bulk_mysql_import"],
+    [class*="st-key-pin_nav_ai_sql_assistant"] {
+        --pin-accent: var(--intel-amber);
+        --pin-accent-bg: rgba(255, 159, 10, 0.16);
+    }
+
+    [class*="st-key-pin_nav_districtwise"],
+    [class*="st-key-pin_nav_filter_by_entry_count"],
+    [class*="st-key-pin_nav_report_generator"],
+    [class*="st-key-pin_nav_automated_workflow"],
+    [class*="st-key-pin_nav_excel_merger"],
+    [class*="st-key-pin_nav_drop_call_finder"],
+    [class*="st-key-pin_nav_mo_finder"],
+    [class*="st-key-pin_nav_ack_bank_consolidator"] {
+        --pin-accent: var(--intel-blue);
+        --pin-accent-bg: rgba(47, 128, 255, 0.16);
+    }
+
+    [class*="st-key-pin_nav_smart_district_split"],
+    [class*="st-key-pin_nav_filter_by_unique_ack"],
+    [class*="st-key-pin_nav_non_gujarat_filter"],
+    [class*="st-key-pin_nav_ack_list_pivot"],
+    [class*="st-key-pin_nav_column_selector"],
+    [class*="st-key-pin_nav_csv_fixer"],
+    [class*="st-key-pin_nav_disputed_amount_matcher"],
+    [class*="st-key-pin_nav_money_transfer_dispute"],
+    [class*="st-key-pin_nav_mysql_database_viewer"],
+    [class*="st-key-pin_nav_distinct_account_pivot"] {
+        --pin-accent: var(--intel-green);
+        --pin-accent-bg: rgba(33, 193, 107, 0.16);
+    }
+
+    [class*="st-key-pin_nav_"] button {
+        border-left: 3px solid var(--pin-accent) !important;
+        background: linear-gradient(90deg, var(--pin-accent-bg), var(--intel-panel) 64%) !important;
+        color: var(--intel-text) !important;
     }
 
     .sidebar-logo {
@@ -1344,6 +1402,46 @@ def apply_custom_css():
         border-left: 2px solid var(--intel-blue);
         border-right: 2px solid var(--intel-red);
         color: var(--intel-text) !important;
+    }
+
+    .sidebar-section-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        width: 100%;
+        margin: 16px 0 8px;
+        padding: 7px 9px 7px 11px;
+        border-left: 3px solid var(--intel-blue);
+        border-radius: 5px;
+        background: linear-gradient(90deg, rgba(47, 128, 255, 0.18), rgba(17, 22, 30, 0.24) 68%);
+        color: var(--intel-text) !important;
+        font-family: var(--intel-font) !important;
+        font-size: 0.74rem;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+        line-height: 1.2;
+        text-transform: uppercase;
+    }
+
+    .sidebar-section-title::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--intel-green);
+        box-shadow: 0 0 10px rgba(33, 193, 107, 0.58);
+        flex: 0 0 auto;
+    }
+
+    .sidebar-section-title span {
+        margin-left: auto;
+        padding: 2px 7px;
+        border: 1px solid rgba(255, 159, 10, 0.42);
+        border-radius: 999px;
+        background: rgba(255, 159, 10, 0.10);
+        color: var(--intel-amber) !important;
+        font-size: 0.68rem;
     }
 
     [data-testid="stSidebar"] hr,
@@ -1658,6 +1756,65 @@ def apply_custom_css():
         color: var(--intel-text) !important;
     }
 
+    [data-testid="stSidebar"] [class*="st-key-pin_current_page"] button {
+        border-left: 3px solid var(--intel-green) !important;
+        background: linear-gradient(90deg, rgba(33, 193, 107, 0.16), rgba(17, 22, 30, 0.96) 66%) !important;
+        color: var(--intel-text) !important;
+        box-shadow: inset 3px 0 0 var(--intel-green) !important;
+    }
+
+    [data-testid="stSidebar"] [class*="st-key-pin_current_page"] button:hover {
+        border-color: var(--intel-green) !important;
+        background: linear-gradient(90deg, rgba(33, 193, 107, 0.24), #151B24 66%) !important;
+    }
+
+    [data-testid="stSidebar"] [class*="st-key-unpin_current_page"] button {
+        border-left: 3px solid var(--intel-red) !important;
+        background: linear-gradient(90deg, rgba(240, 67, 72, 0.16), rgba(17, 22, 30, 0.96) 66%) !important;
+        color: var(--intel-text) !important;
+        box-shadow: inset 3px 0 0 var(--intel-red) !important;
+    }
+
+    [data-testid="stSidebar"] [class*="st-key-unpin_current_page"] button:hover {
+        border-color: var(--intel-red) !important;
+        background: linear-gradient(90deg, rgba(240, 67, 72, 0.24), #151B24 66%) !important;
+    }
+
+    [data-testid="stSidebar"] [class*="st-key-pin_current_page"] button p,
+    [data-testid="stSidebar"] [class*="st-key-pin_current_page"] button span,
+    [data-testid="stSidebar"] [class*="st-key-pin_current_page"] button div,
+    [data-testid="stSidebar"] [class*="st-key-unpin_current_page"] button p,
+    [data-testid="stSidebar"] [class*="st-key-unpin_current_page"] button span,
+    [data-testid="stSidebar"] [class*="st-key-unpin_current_page"] button div {
+        color: var(--intel-text) !important;
+        font-weight: 800 !important;
+    }
+
+    [class*="st-key-show_pin_manager"] {
+        margin: 8px 0 12px !important;
+    }
+
+    [class*="st-key-show_pin_manager"] label {
+        width: 100% !important;
+        padding: 8px 10px !important;
+        border: 1px solid rgba(47, 128, 255, 0.32) !important;
+        border-left: 3px solid var(--intel-blue) !important;
+        border-radius: 6px !important;
+        background: linear-gradient(90deg, rgba(47, 128, 255, 0.13), rgba(17, 22, 30, 0.40) 70%) !important;
+    }
+
+    [class*="st-key-show_pin_manager"] label p,
+    [class*="st-key-show_pin_manager"] label span,
+    [class*="st-key-show_pin_manager"] label div {
+        color: #BFD7FF !important;
+        font-family: var(--intel-font) !important;
+        font-weight: 800 !important;
+    }
+
+    [class*="st-key-show_pin_manager"] [data-testid="stCheckbox"] {
+        color: var(--intel-blue) !important;
+    }
+
     [class*="st-key-nav_upload"] button,
     [class*="st-key-nav_top_10_suspect"] button,
     [class*="st-key-nav_amount_matcher"] button,
@@ -1679,6 +1836,7 @@ def apply_custom_css():
     [class*="st-key-nav_district_download"] button,
     [class*="st-key-nav_ifsc_pincode_split"] button,
     [class*="st-key-nav_bank_ack_pivot"] button,
+    [class*="st-key-nav_call_notice_merge"] button,
     [class*="st-key-nav_bulk_mysql_import"] button,
     [class*="st-key-nav_ai_sql_assistant"] button {
         border-left-color: var(--intel-amber) !important;
@@ -1688,6 +1846,7 @@ def apply_custom_css():
     [class*="st-key-nav_district_download"],
     [class*="st-key-nav_ifsc_pincode_split"],
     [class*="st-key-nav_bank_ack_pivot"],
+    [class*="st-key-nav_call_notice_merge"],
     [class*="st-key-nav_bulk_mysql_import"],
     [class*="st-key-nav_ai_sql_assistant"] {
         border-left: 3px solid var(--intel-amber) !important;
@@ -1697,6 +1856,7 @@ def apply_custom_css():
     [class*="st-key-nav_districtwise"] button,
     [class*="st-key-nav_filter_by_entry_count"] button,
     [class*="st-key-nav_report_generator"] button,
+    [class*="st-key-nav_automated_workflow"] button,
     [class*="st-key-nav_excel_merger"] button,
     [class*="st-key-nav_drop_call_finder"] button,
     [class*="st-key-nav_mo_finder"] button,
@@ -1708,6 +1868,7 @@ def apply_custom_css():
     [class*="st-key-nav_districtwise"],
     [class*="st-key-nav_filter_by_entry_count"],
     [class*="st-key-nav_report_generator"],
+    [class*="st-key-nav_automated_workflow"],
     [class*="st-key-nav_excel_merger"],
     [class*="st-key-nav_drop_call_finder"],
     [class*="st-key-nav_mo_finder"],
@@ -1742,6 +1903,23 @@ def apply_custom_css():
     [class*="st-key-nav_distinct_account_pivot"] {
         border-left: 3px solid var(--intel-green) !important;
         border-radius: 6px !important;
+    }
+
+    [class*="st-key-pin_nav_"],
+    [class*="st-key-pin_nav_"] button {
+        border-left-color: var(--pin-accent) !important;
+        box-shadow: inset 3px 0 0 var(--pin-accent) !important;
+    }
+
+    [class*="st-key-pin_nav_"] {
+        border-left: 3px solid var(--pin-accent) !important;
+        border-radius: 6px !important;
+    }
+
+    [class*="st-key-pin_nav_"] button p,
+    [class*="st-key-pin_nav_"] button span,
+    [class*="st-key-pin_nav_"] button div {
+        color: var(--intel-text) !important;
     }
 
     .stButton button[kind="primary"] {
