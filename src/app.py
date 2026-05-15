@@ -114,8 +114,16 @@ def init_session_state():
 def render_sidebar():
     """Render the navigation sidebar."""
     with st.sidebar:
-        st.title("🔍 DataLens")
-        st.caption("for Cyber Cell")
+        st.markdown(
+            '<div class="sidebar-logo" aria-label="DataLens Cyber Cell Intelligence">'
+            '<div class="sidebar-brand">'
+            '<span class="brand-data">Data</span><span class="brand-lens">Lens</span>'
+            '</div>'
+            '<div class="brand-accent-line"><span></span><span></span><span></span><span></span></div>'
+            '<div class="sidebar-subtitle">Cyber Cell Intelligence</div>'
+            '</div>',
+            unsafe_allow_html=True
+        )
         st.markdown("---")
         
         # Page navigation
@@ -148,7 +156,37 @@ def render_sidebar():
             'view_database': '🗄️ View Database'
         }
         
+        clean_page_names = {
+            'upload': 'Aggregate by Account',
+            'district_download': 'Victim-Suspect Mapping',
+            'top_10_suspect': 'Top 10 Suspect Accounts',
+            'districtwise': 'Split Data by Column',
+            'smart_district_split': 'Smart District Split',
+            'ifsc_pincode_split': 'IFSC/PIN District Split',
+            'filter_by_entry_count': 'Filter by Entry Count',
+            'filter_by_unique_ack': 'Unique ACK Filter',
+            'non_gujarat_filter': 'Non-Gujarat Filter',
+            'amount_matcher': 'Disputed Amount Matcher',
+            'bank_ack_pivot': 'Bank ACK Pivot',
+            'ack_list_pivot': 'ACK List Pivot',
+            'report_generator': 'Account & Hold Report',
+            'automated_workflow': 'Automated Workflow',
+            'column_selector': 'Column Selector',
+            'excel_merger': 'Merge Excel Files',
+            'call_notice_merge': 'Call Notice Mapping',
+            'transaction_matcher': 'Transaction Matcher',
+            'disputed_amount_matcher': 'ACK Account Matcher',
+            'money_transfer_dispute': 'Money Transfer Dispute',
+            'ack_bank_consolidator': 'ACK Bank Consolidator',
+            'bulk_mysql_import': 'Bulk MySQL Import',
+            'mysql_database_viewer': 'MySQL Database Viewer',
+            'ai_sql_assistant': 'AI SQL Assistant',
+            'distinct_account_pivot': 'Distinct Account Pivot',
+            'view_database': 'View Database'
+        }
+
         for page_key, page_name in pages.items():
+            page_name = clean_page_names.get(page_key, page_name)
             if st.button(page_name, key=f"nav_{page_key}", use_container_width=True):
                 st.session_state.current_page = page_key
                 st.rerun()
@@ -156,20 +194,20 @@ def render_sidebar():
         st.markdown("---")
         
         # Session info
-        st.caption("📊 Session Info")
+        st.caption("Session Info")
         if st.session_state.filename:
-            st.caption(f"📁 {st.session_state.filename}")
+            st.caption(st.session_state.filename)
         
         st.markdown("---")
         
         # Data handling reminder
-        st.caption("🔒 Security")
+        st.caption("Security")
         st.caption("All data processed in-memory only.")
         st.caption("No data stored on servers.")
         
         # Reset button
         st.markdown("---")
-        if st.button("🔄 Start Over", use_container_width=True):
+        if st.button("Start Over", use_container_width=True):
             for key in list(st.session_state.keys()):
                 del st.session_state[key]
             st.rerun()

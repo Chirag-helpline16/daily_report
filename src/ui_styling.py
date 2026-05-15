@@ -3,45 +3,48 @@ UI Styling and Theme Configuration for DataLens for Cyber Cell
 Hyper-Premium Midnight Theme with Ultra Smooth Animations
 """
 
+from datetime import datetime
+from html import escape
+
 import streamlit as st
 
-# Color Scheme - Hyper-Premium Midnight Theme
+# Color Scheme - Cyber intelligence report theme
 COLORS = {
-    # Primary - Midnight Slate & Neon
-    'deep_ocean': '#060608',       # Dark midnight background
-    'ocean_blue': '#0D0E15',       # Darker slate
-    'water_blue': '#8B5CF6',       # Vibrant Neon Purple
-    'sky_blue': '#00F5FF',         # Electric Cyan
-    'light_aqua': '#D946EF',       # Neon Magenta
-    'foam_white': '#FFFFFF',       # Bright white
+    # Primary - matte dark interface
+    'deep_ocean': '#080B10',
+    'ocean_blue': '#10141B',
+    'water_blue': '#2F80FF',
+    'sky_blue': '#6F8BAE',
+    'light_aqua': '#F04348',
+    'foam_white': '#F8F3EA',
     
-    # Accent - Holographic
-    'coral': '#EC4899',            # Pink
-    'teal': '#10B981',             # Emerald green
-    'mint': '#6EE7B7',             # Light Mint
-    'seafoam': '#A78BFA',          # Soft bright indigo
+    # Accent - report ranking colors
+    'coral': '#F04348',
+    'teal': '#21C16B',
+    'mint': '#FF9F0A',
+    'seafoam': '#2F80FF',
     
     # Background
-    'background': '#020203',       # Absolute black
-    'background_card': 'rgba(15, 15, 20, 0.65)', # Sleek dark card
-    'text_primary': '#F3F4F6',     # Off White
-    'text_secondary': '#00F5FF',   # Cyan text
-    'text_muted': '#9CA3AF',       # Gray text
+    'background': '#070A0F',
+    'background_card': '#11161E',
+    'text_primary': '#F8F3EA',
+    'text_secondary': '#91A0B8',
+    'text_muted': '#6F7D92',
     
     # Status colors
-    'success': '#10B981',          # Emerald
-    'warning': '#F59E0B',          # Amber
-    'error': '#EF4444',            # Red
-    'info': '#3B82F6',             # Blue
+    'success': '#21C16B',
+    'warning': '#FF9F0A',
+    'error': '#F04348',
+    'info': '#2F80FF',
     
-    # Glass effect
-    'glass_bg': 'rgba(255, 255, 255, 0.03)',
-    'glass_border': 'rgba(255, 255, 255, 0.08)',
+    # Panel effect
+    'glass_bg': '#11161E',
+    'glass_border': '#242C39',
     
     # Additional
-    'border': '#1F2937',
-    'hover': 'rgba(255, 150, 255, 0.5)',
-    'shadow': 'rgba(0, 245, 255, 0.2)'
+    'border': '#242C39',
+    'hover': '#181E28',
+    'shadow': 'rgba(0, 0, 0, 0.35)'
 }
 
 PAGE_INFO = {
@@ -1023,90 +1026,1128 @@ def apply_custom_css():
     </style>
     """, unsafe_allow_html=True)
 
-    # Sidebar drag-to-resize JS
+    # Final theme override: matte cyber-intelligence report look.
     st.markdown("""
     <style>
-    /* Resize handle on sidebar right edge */
-    #sidebar-resizer {
-        position: fixed;
-        top: 0;
-        width: 6px;
-        height: 100vh;
-        cursor: col-resize;
-        z-index: 999999;
-        background: transparent;
-        transition: background 0.2s;
+    @import url('https://fonts.googleapis.com/css2?family=Michroma&family=Space+Mono:wght@400;700&display=swap');
+    @import url('https://fonts.googleapis.com/icon?family=Material+Icons|Material+Icons+Outlined');
+    @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400,0,0&display=block');
+
+    :root {
+        --intel-bg: #070A0F;
+        --intel-panel: #11161E;
+        --intel-panel-2: #0D1118;
+        --intel-border: #242C39;
+        --intel-border-soft: #1A222E;
+        --intel-text: #F8F3EA;
+        --intel-muted: #91A0B8;
+        --intel-faint: #617086;
+        --intel-red: #F04348;
+        --intel-amber: #FF9F0A;
+        --intel-blue: #2F80FF;
+        --intel-green: #21C16B;
+        --intel-font: 'Space Mono', ui-monospace, SFMono-Regular, Consolas, monospace;
+        --intel-display: 'Michroma', 'Space Mono', ui-monospace, monospace;
     }
+
+    html, body, .stApp, [class*="css"] {
+        font-family: var(--intel-font) !important;
+        background: var(--intel-bg) !important;
+        color: var(--intel-text) !important;
+    }
+
+    body * {
+        font-family: var(--intel-font) !important;
+        letter-spacing: 0 !important;
+        text-shadow: none !important;
+        animation: none !important;
+    }
+
+    .material-icons,
+    .material-icons-outlined,
+    .material-symbols-rounded,
+    .material-symbols-outlined,
+    [data-testid="stIconMaterial"],
+    span[class*="material-icons"],
+    span[class*="material-symbols"] {
+        font-family: 'Material Symbols Rounded', 'Material Icons', 'Material Icons Outlined' !important;
+        font-weight: normal !important;
+        font-style: normal !important;
+        font-size: 20px !important;
+        line-height: 1 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 22px !important;
+        min-width: 22px !important;
+        max-width: 22px !important;
+        height: 22px !important;
+        overflow: hidden !important;
+        white-space: nowrap !important;
+        text-transform: none !important;
+        letter-spacing: normal !important;
+        word-wrap: normal !important;
+        direction: ltr !important;
+        -webkit-font-feature-settings: 'liga' !important;
+        -webkit-font-smoothing: antialiased !important;
+        font-feature-settings: 'liga' !important;
+        color: var(--intel-muted) !important;
+    }
+
+    html body .stApp [data-testid="stExpander"] summary > span {
+        font-family: var(--intel-font) !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+    }
+
+    html body .stApp [data-testid="stExpander"] summary > span > span:first-child,
+    html body .stApp details summary > span > span:first-child,
+    html body .stApp [data-testid="stExpander"] summary > span > span:first-child *,
+    html body .stApp details summary > span > span:first-child * {
+        color: transparent !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        flex: 0 0 22px !important;
+        width: 22px !important;
+        min-width: 22px !important;
+        max-width: 22px !important;
+        height: 22px !important;
+        margin-right: 4px !important;
+        overflow: hidden !important;
+        font-size: 0 !important;
+        line-height: 1 !important;
+        white-space: nowrap !important;
+    }
+
+    html body .stApp [data-testid="stExpander"] summary > span > span:first-child::before,
+    html body .stApp details summary > span > span:first-child::before {
+        content: "" !important;
+        width: 0 !important;
+        height: 0 !important;
+        border-top: 7px solid transparent !important;
+        border-bottom: 7px solid transparent !important;
+        border-left: 10px solid var(--intel-amber) !important;
+        display: block !important;
+    }
+
+    html body .stApp [data-testid="stExpander"] details[open] summary > span > span:first-child::before,
+    html body .stApp details[open] summary > span > span:first-child::before {
+        content: "" !important;
+        border-left: 7px solid transparent !important;
+        border-right: 7px solid transparent !important;
+        border-top: 10px solid var(--intel-amber) !important;
+        border-bottom: 0 !important;
+    }
+
+    button[data-testid="stBaseButton-headerNoPadding"] {
+        color: transparent !important;
+        font-size: 0 !important;
+    }
+
+    button[data-testid="stBaseButton-headerNoPadding"]::before {
+        content: "\\2039" !important;
+        color: var(--intel-muted) !important;
+        font-family: Arial, sans-serif !important;
+        font-size: 20px !important;
+        line-height: 1 !important;
+    }
+
+    svg {
+        flex: 0 0 auto !important;
+    }
+
+    header[data-testid="stHeader"], .stApp > header {
+        background: transparent !important;
+        height: 0 !important;
+    }
+
+    .stApp,
+    [data-testid="stAppViewContainer"] {
+        background: var(--intel-bg) !important;
+    }
+
+    [data-testid="stAppViewBlockContainer"] {
+        max-width: 100% !important;
+        padding: 32px !important;
+        margin: 0 !important;
+        background: transparent !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
+
+    [data-testid="stSidebar"] {
+        background: #090C12 !important;
+        border-right: 1px solid var(--intel-border) !important;
+        box-shadow: none !important;
+    }
+
+    [data-testid="stSidebar"]::before {
+        display: none !important;
+    }
+
+    [data-testid="stSidebar"] > div {
+        background: transparent !important;
+    }
+
+    button[data-testid="stBaseButton-headerNoPadding"] {
+        font-family: Arial, sans-serif !important;
+        font-size: 0 !important;
+        line-height: 1 !important;
+        color: transparent !important;
+        background: transparent !important;
+        border: 0 !important;
+        width: 28px !important;
+        height: 28px !important;
+        min-height: 28px !important;
+        padding: 4px !important;
+        overflow: hidden !important;
+        white-space: nowrap !important;
+        -webkit-font-feature-settings: 'liga' !important;
+        font-feature-settings: 'liga' !important;
+    }
+
+    [class*="st-key-nav_upload"] button,
+    [class*="st-key-nav_top_10_suspect"] button,
+    [class*="st-key-nav_amount_matcher"] button,
+    [class*="st-key-nav_transaction_matcher"] button,
+    [class*="st-key-nav_view_database"] button {
+        border-left: 3px solid var(--intel-red) !important;
+    }
+
+    [class*="st-key-nav_district_download"] button,
+    [class*="st-key-nav_ifsc_pincode_split"] button,
+    [class*="st-key-nav_bank_ack_pivot"] button,
+    [class*="st-key-nav_bulk_mysql_import"] button,
+    [class*="st-key-nav_ai_sql_assistant"] button {
+        border-left: 3px solid var(--intel-amber) !important;
+    }
+
+    [class*="st-key-nav_districtwise"] button,
+    [class*="st-key-nav_filter_by_entry_count"] button,
+    [class*="st-key-nav_report_generator"] button,
+    [class*="st-key-nav_excel_merger"] button,
+    [class*="st-key-nav_ack_bank_consolidator"] button {
+        border-left: 3px solid var(--intel-blue) !important;
+    }
+
+    [class*="st-key-nav_smart_district_split"] button,
+    [class*="st-key-nav_filter_by_unique_ack"] button,
+    [class*="st-key-nav_non_gujarat_filter"] button,
+    [class*="st-key-nav_ack_list_pivot"] button,
+    [class*="st-key-nav_column_selector"] button,
+    [class*="st-key-nav_disputed_amount_matcher"] button,
+    [class*="st-key-nav_money_transfer_dispute"] button,
+    [class*="st-key-nav_mysql_database_viewer"] button,
+    [class*="st-key-nav_distinct_account_pivot"] button {
+        border-left: 3px solid var(--intel-green) !important;
+    }
+
+    .sidebar-logo {
+        position: relative;
+        margin: 12px 0 8px;
+        padding: 0 0 4px;
+    }
+
+    .sidebar-brand {
+        position: relative;
+        display: inline-flex;
+        align-items: baseline;
+        color: var(--intel-text);
+        font-family: var(--intel-display) !important;
+        font-size: 1.42rem;
+        font-weight: 400;
+        line-height: 1.05;
+        margin: 0;
+        padding: 0 2px 0 0;
+    }
+
+    .sidebar-brand::before {
+        content: "";
+        position: absolute;
+        left: -3px;
+        top: 2px;
+        width: 14px;
+        height: 14px;
+        border: 2px solid var(--intel-amber);
+        border-right-color: var(--intel-blue);
+        border-radius: 2px;
+        transform: translateX(-2px);
+    }
+
+    .sidebar-brand span {
+        font-family: var(--intel-display) !important;
+    }
+
+    .sidebar-brand .brand-data {
+        color: var(--intel-text);
+        padding-left: 2px;
+    }
+
+    .sidebar-brand .brand-lens {
+        background: linear-gradient(90deg, var(--intel-blue), var(--intel-green) 58%, var(--intel-amber));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent !important;
+        -webkit-text-fill-color: transparent !important;
+    }
+
+    .brand-accent-line {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr 1fr;
+        gap: 3px;
+        width: 136px;
+        height: 3px;
+        margin: 8px 0 7px;
+    }
+
+    .brand-accent-line span {
+        display: block;
+        border-radius: 999px;
+    }
+
+    .brand-accent-line span:nth-child(1) {
+        background: var(--intel-red);
+    }
+
+    .brand-accent-line span:nth-child(2) {
+        background: var(--intel-amber);
+    }
+
+    .brand-accent-line span:nth-child(3) {
+        background: var(--intel-blue);
+    }
+
+    .brand-accent-line span:nth-child(4) {
+        background: var(--intel-green);
+    }
+
+    .sidebar-subtitle,
+    [data-testid="stSidebar"] .stCaption,
+    [data-testid="stSidebar"] caption {
+        color: var(--intel-text) !important;
+        font-size: 0.72rem !important;
+        font-weight: 700 !important;
+        text-transform: uppercase;
+    }
+
+    .sidebar-subtitle {
+        display: inline-block;
+        padding: 2px 6px;
+        background: rgba(47, 128, 255, 0.10);
+        border-left: 2px solid var(--intel-blue);
+        border-right: 2px solid var(--intel-red);
+        color: var(--intel-text) !important;
+    }
+
+    [data-testid="stSidebar"] hr,
+    hr {
+        border: 0 !important;
+        border-top: 1px solid var(--intel-border-soft) !important;
+        margin: 20px 0 !important;
+        box-shadow: none !important;
+        opacity: 1 !important;
+    }
+
+    h1, h2, h3,
+    [data-testid="stMarkdownContainer"] h1,
+    [data-testid="stMarkdownContainer"] h2,
+    [data-testid="stMarkdownContainer"] h3 {
+        font-family: var(--intel-display) !important;
+        position: relative;
+        width: fit-content;
+        max-width: 100%;
+        font-weight: 400 !important;
+        text-transform: none !important;
+        background: none !important;
+        -webkit-text-fill-color: currentColor !important;
+        letter-spacing: 0 !important;
+        white-space: normal !important;
+        overflow-wrap: anywhere !important;
+    }
+
+    h1,
+    [data-testid="stMarkdownContainer"] h1 {
+        font-size: 2rem !important;
+        line-height: 1.05 !important;
+        margin: 0 0 0.65rem !important;
+        padding-left: 14px !important;
+        color: #6EA6FF !important;
+    }
+
+    h1::before,
+    [data-testid="stMarkdownContainer"] h1::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0.12em;
+        width: 3px;
+        height: 0.92em;
+        border-radius: 999px;
+        background: linear-gradient(180deg, var(--intel-red), var(--intel-amber));
+    }
+
+    h1::after,
+    [data-testid="stMarkdownContainer"] h1::after {
+        content: "";
+        display: block;
+        width: min(190px, 62%);
+        height: 2px;
+        margin-top: 10px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, var(--intel-red), var(--intel-amber), var(--intel-blue), var(--intel-green));
+        opacity: 0.9;
+    }
+
+    h2,
+    [data-testid="stMarkdownContainer"] h2 {
+        font-size: 1.25rem !important;
+        line-height: 1.2 !important;
+        margin: 1.1rem 0 0.6rem !important;
+        padding-left: 12px !important;
+        color: #F2B35B !important;
+        border-left: 2px solid var(--intel-amber);
+    }
+
+    h3,
+    [data-testid="stMarkdownContainer"] h3 {
+        font-size: 1rem !important;
+        line-height: 1.25 !important;
+        margin: 0.95rem 0 0.45rem !important;
+        padding-left: 10px !important;
+        color: #58D68D !important;
+        border-left: 2px solid var(--intel-green);
+    }
+
+    p, li, label,
+    [data-testid="stMarkdownContainer"] p,
+    [data-testid="stMarkdownContainer"] li {
+        color: var(--intel-muted) !important;
+        font-size: 0.88rem !important;
+        line-height: 1.55 !important;
+    }
+
+    strong {
+        color: var(--intel-text) !important;
+        font-weight: 700 !important;
+    }
+
+    small, .stCaption, [data-testid="stCaptionContainer"] {
+        color: var(--intel-faint) !important;
+        font-size: 0.72rem !important;
+    }
+
+    .intel-page-header {
+        position: relative;
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 24px;
+        padding: 2px 0 22px;
+        border-bottom: 1px solid var(--intel-border-soft);
+        box-shadow: inset 0 -2px 0 rgba(47, 128, 255, 0.16);
+        margin-bottom: 26px;
+    }
+
+    .intel-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        width: fit-content;
+        font-size: 1.35rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+
+    .intel-page-header .intel-kicker {
+        color: var(--intel-amber) !important;
+    }
+
+    .intel-kicker::before {
+        content: "";
+        width: 18px;
+        height: 2px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, var(--intel-red), var(--intel-amber));
+        box-shadow: 0 0 12px rgba(255, 159, 10, 0.24);
+    }
+
+    .intel-page-header h1 {
+        display: inline-block;
+        color: var(--intel-text) !important;
+        background: none !important;
+        -webkit-text-fill-color: currentColor !important;
+        font-family: var(--intel-display) !important;
+        font-size: 2rem !important;
+        line-height: 1.05 !important;
+        padding-left: 0 !important;
+        margin: 0 !important;
+    }
+
+    .intel-page-header h1::before {
+        display: none !important;
+    }
+
+    .intel-page-header h1::after {
+        content: "";
+        display: block;
+        width: 46%;
+        min-width: 132px;
+        height: 3px;
+        margin-top: 11px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, var(--intel-red), var(--intel-amber), var(--intel-blue), var(--intel-green));
+        opacity: 0.95;
+    }
+
+    .intel-page-header h1 .accent {
+        color: var(--intel-red) !important;
+        -webkit-text-fill-color: var(--intel-red) !important;
+        background: none !important;
+        font-family: var(--intel-display) !important;
+    }
+
+    .intel-page-header h1 .title-base,
+    .intel-page-header h1 .title-focus,
+    .intel-page-header h1 .title-success,
+    .intel-page-header h1 .title-hot,
+    .datalens-global-title .title-base,
+    .datalens-global-title .title-focus,
+    .datalens-global-title .title-success,
+    .datalens-global-title .title-hot {
+        font-family: var(--intel-display) !important;
+        font-size: inherit !important;
+        line-height: inherit !important;
+        background: none !important;
+    }
+
+    .intel-page-header h1 .title-base,
+    .datalens-global-title .title-base {
+        color: var(--intel-text) !important;
+        -webkit-text-fill-color: var(--intel-text) !important;
+    }
+
+    .intel-page-header h1 .title-focus,
+    .datalens-global-title .title-focus {
+        color: var(--intel-blue) !important;
+        -webkit-text-fill-color: var(--intel-blue) !important;
+    }
+
+    .intel-page-header h1 .title-success,
+    .datalens-global-title .title-success {
+        color: var(--intel-green) !important;
+        -webkit-text-fill-color: var(--intel-green) !important;
+    }
+
+    .intel-page-header h1 .title-hot,
+    .datalens-global-title .title-hot {
+        color: var(--intel-red) !important;
+        -webkit-text-fill-color: var(--intel-red) !important;
+    }
+
+    .intel-slogan {
+        display: block;
+        margin-top: 12px;
+        color: #A2AEC2 !important;
+        font-size: 0.78rem;
+        font-weight: 600;
+        text-transform: none;
+    }
+
+    .intel-slogan .slogan-intel {
+        color: var(--intel-red) !important;
+    }
+
+    .intel-slogan .slogan-trace {
+        color: var(--intel-blue) !important;
+    }
+
+    .intel-slogan .slogan-report {
+        color: var(--intel-green) !important;
+    }
+
+    .intel-slogan .slogan-sep {
+        color: var(--intel-faint) !important;
+    }
+
+    .intel-page-header p {
+        margin: 9px 0 0 !important;
+        color: #7F93B4 !important;
+        font-size: 0.74rem !important;
+        text-transform: uppercase;
+    }
+
+    .intel-badge {
+        border: 1px solid rgba(240, 67, 72, 0.45);
+        background: rgba(240, 67, 72, 0.08);
+        color: var(--intel-red);
+        border-radius: 4px;
+        padding: 7px 12px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .stButton button,
+    [data-testid="stSidebar"] .stButton button {
+        background: var(--intel-panel) !important;
+        color: var(--intel-muted) !important;
+        border: 1px solid var(--intel-border) !important;
+        border-radius: 6px !important;
+        box-shadow: none !important;
+        padding: 10px 14px !important;
+        font-size: 0.76rem !important;
+        font-weight: 700 !important;
+        text-transform: none !important;
+        transform: none !important;
+        line-height: 1.25 !important;
+        min-height: 38px !important;
+        white-space: normal !important;
+        overflow-wrap: anywhere !important;
+        transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease !important;
+    }
+
+    [data-testid="stSidebar"] .stButton button {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        text-align: left !important;
+        color: #DDE8F6 !important;
+        padding-left: 22px !important;
+        padding-right: 12px !important;
+    }
+
+    [data-testid="stSidebar"] .stButton button p,
+    [data-testid="stSidebar"] .stButton button span,
+    [data-testid="stSidebar"] .stButton button div {
+        color: #DDE8F6 !important;
+        text-align: left !important;
+        justify-content: flex-start !important;
+    }
+
+    .stButton button:hover,
+    [data-testid="stSidebar"] .stButton button:hover {
+        background: #151B24 !important;
+        color: var(--intel-text) !important;
+        border-color: var(--intel-red) !important;
+        transform: none !important;
+    }
+
+    [data-testid="stSidebar"] .stButton button:hover,
+    [data-testid="stSidebar"] .stButton button:focus,
+    [data-testid="stSidebar"] .stButton button:active {
+        color: var(--intel-text) !important;
+    }
+
+    [data-testid="stSidebar"] .stButton button:hover p,
+    [data-testid="stSidebar"] .stButton button:hover span,
+    [data-testid="stSidebar"] .stButton button:hover div,
+    [data-testid="stSidebar"] .stButton button:focus p,
+    [data-testid="stSidebar"] .stButton button:focus span,
+    [data-testid="stSidebar"] .stButton button:focus div,
+    [data-testid="stSidebar"] .stButton button:active p,
+    [data-testid="stSidebar"] .stButton button:active span,
+    [data-testid="stSidebar"] .stButton button:active div {
+        color: var(--intel-text) !important;
+    }
+
+    [class*="st-key-nav_upload"] button,
+    [class*="st-key-nav_top_10_suspect"] button,
+    [class*="st-key-nav_amount_matcher"] button,
+    [class*="st-key-nav_transaction_matcher"] button,
+    [class*="st-key-nav_view_database"] button {
+        border-left-color: var(--intel-red) !important;
+        box-shadow: inset 3px 0 0 var(--intel-red) !important;
+    }
+
+    [class*="st-key-nav_upload"],
+    [class*="st-key-nav_top_10_suspect"],
+    [class*="st-key-nav_amount_matcher"],
+    [class*="st-key-nav_transaction_matcher"],
+    [class*="st-key-nav_view_database"] {
+        border-left: 3px solid var(--intel-red) !important;
+        border-radius: 6px !important;
+    }
+
+    [class*="st-key-nav_district_download"] button,
+    [class*="st-key-nav_ifsc_pincode_split"] button,
+    [class*="st-key-nav_bank_ack_pivot"] button,
+    [class*="st-key-nav_bulk_mysql_import"] button,
+    [class*="st-key-nav_ai_sql_assistant"] button {
+        border-left-color: var(--intel-amber) !important;
+        box-shadow: inset 3px 0 0 var(--intel-amber) !important;
+    }
+
+    [class*="st-key-nav_district_download"],
+    [class*="st-key-nav_ifsc_pincode_split"],
+    [class*="st-key-nav_bank_ack_pivot"],
+    [class*="st-key-nav_bulk_mysql_import"],
+    [class*="st-key-nav_ai_sql_assistant"] {
+        border-left: 3px solid var(--intel-amber) !important;
+        border-radius: 6px !important;
+    }
+
+    [class*="st-key-nav_districtwise"] button,
+    [class*="st-key-nav_filter_by_entry_count"] button,
+    [class*="st-key-nav_report_generator"] button,
+    [class*="st-key-nav_excel_merger"] button,
+    [class*="st-key-nav_ack_bank_consolidator"] button {
+        border-left-color: var(--intel-blue) !important;
+        box-shadow: inset 3px 0 0 var(--intel-blue) !important;
+    }
+
+    [class*="st-key-nav_districtwise"],
+    [class*="st-key-nav_filter_by_entry_count"],
+    [class*="st-key-nav_report_generator"],
+    [class*="st-key-nav_excel_merger"],
+    [class*="st-key-nav_ack_bank_consolidator"] {
+        border-left: 3px solid var(--intel-blue) !important;
+        border-radius: 6px !important;
+    }
+
+    [class*="st-key-nav_smart_district_split"] button,
+    [class*="st-key-nav_filter_by_unique_ack"] button,
+    [class*="st-key-nav_non_gujarat_filter"] button,
+    [class*="st-key-nav_ack_list_pivot"] button,
+    [class*="st-key-nav_column_selector"] button,
+    [class*="st-key-nav_disputed_amount_matcher"] button,
+    [class*="st-key-nav_money_transfer_dispute"] button,
+    [class*="st-key-nav_mysql_database_viewer"] button,
+    [class*="st-key-nav_distinct_account_pivot"] button {
+        border-left-color: var(--intel-green) !important;
+        box-shadow: inset 3px 0 0 var(--intel-green) !important;
+    }
+
+    [class*="st-key-nav_smart_district_split"],
+    [class*="st-key-nav_filter_by_unique_ack"],
+    [class*="st-key-nav_non_gujarat_filter"],
+    [class*="st-key-nav_ack_list_pivot"],
+    [class*="st-key-nav_column_selector"],
+    [class*="st-key-nav_disputed_amount_matcher"],
+    [class*="st-key-nav_money_transfer_dispute"],
+    [class*="st-key-nav_mysql_database_viewer"],
+    [class*="st-key-nav_distinct_account_pivot"] {
+        border-left: 3px solid var(--intel-green) !important;
+        border-radius: 6px !important;
+    }
+
+    .stButton button[kind="primary"] {
+        background: var(--intel-red) !important;
+        color: #090C12 !important;
+        border-color: var(--intel-red) !important;
+        box-shadow: none !important;
+    }
+
+    .stDownloadButton button {
+        background: var(--intel-amber) !important;
+        color: #090C12 !important;
+        border: 1px solid var(--intel-amber) !important;
+        border-radius: 6px !important;
+        box-shadow: none !important;
+        font-weight: 700 !important;
+        text-transform: none !important;
+        min-height: 38px !important;
+        line-height: 1.25 !important;
+        white-space: normal !important;
+    }
+
+    div[data-testid="stMetric"],
+    div[data-testid="metric-container"] {
+        background: var(--intel-panel) !important;
+        border: 1px solid var(--intel-border) !important;
+        border-top: 3px solid var(--intel-red) !important;
+        border-radius: 7px !important;
+        padding: 16px !important;
+        box-shadow: none !important;
+    }
+
+    [data-testid="stHorizontalBlock"] > div:nth-child(2) div[data-testid="stMetric"],
+    [data-testid="stHorizontalBlock"] > div:nth-child(2) div[data-testid="metric-container"] {
+        border-top-color: var(--intel-amber) !important;
+    }
+
+    [data-testid="stHorizontalBlock"] > div:nth-child(3) div[data-testid="stMetric"],
+    [data-testid="stHorizontalBlock"] > div:nth-child(3) div[data-testid="metric-container"] {
+        border-top-color: var(--intel-blue) !important;
+    }
+
+    [data-testid="stHorizontalBlock"] > div:nth-child(4) div[data-testid="stMetric"],
+    [data-testid="stHorizontalBlock"] > div:nth-child(4) div[data-testid="metric-container"] {
+        border-top-color: var(--intel-green) !important;
+    }
+
+    div[data-testid="stMetric"] label,
+    [data-testid="stMetricLabel"] {
+        color: var(--intel-faint) !important;
+        font-size: 0.7rem !important;
+        font-weight: 400 !important;
+        text-transform: uppercase;
+    }
+
+    [data-testid="stMetricValue"] {
+        color: var(--intel-red) !important;
+        -webkit-text-fill-color: var(--intel-red) !important;
+        background: none !important;
+        font-family: var(--intel-display) !important;
+        font-size: 2rem !important;
+        font-weight: 400 !important;
+        line-height: 1.1 !important;
+    }
+
+    [data-testid="stHorizontalBlock"] > div:nth-child(2) [data-testid="stMetricValue"] {
+        color: var(--intel-amber) !important;
+        -webkit-text-fill-color: var(--intel-amber) !important;
+    }
+
+    [data-testid="stHorizontalBlock"] > div:nth-child(3) [data-testid="stMetricValue"] {
+        color: var(--intel-blue) !important;
+        -webkit-text-fill-color: var(--intel-blue) !important;
+    }
+
+    [data-testid="stHorizontalBlock"] > div:nth-child(4) [data-testid="stMetricValue"] {
+        color: var(--intel-green) !important;
+        -webkit-text-fill-color: var(--intel-green) !important;
+    }
+
+    [data-testid="stMetricDelta"] {
+        color: var(--intel-muted) !important;
+        font-size: 0.74rem !important;
+    }
+
+    .stExpander,
+    [data-testid="stForm"],
+    [data-testid="stFileUploader"],
+    div[data-testid="stAlert"],
+    [data-testid="stNotification"] {
+        background: var(--intel-panel) !important;
+        border: 1px solid var(--intel-border) !important;
+        border-radius: 7px !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
+
+    .stExpander:hover {
+        border-color: var(--intel-blue) !important;
+        transform: none !important;
+        box-shadow: none !important;
+    }
+
+    [data-testid="stFileUploader"] {
+        background: linear-gradient(135deg, rgba(47, 128, 255, 0.10), rgba(17, 22, 30, 0.94)) !important;
+        border-style: dashed !important;
+        border-color: rgba(47, 128, 255, 0.45) !important;
+        padding: 18px !important;
+    }
+
+    [data-testid="stFileUploader"] button,
+    [data-testid="stFileUploader"] section > button {
+        background: #151B24 !important;
+        color: var(--intel-text) !important;
+        border-radius: 6px !important;
+        border: 1px solid var(--intel-red) !important;
+        box-shadow: none !important;
+        font-size: 0.75rem !important;
+        font-weight: 700 !important;
+        opacity: 1 !important;
+        white-space: nowrap !important;
+    }
+
+    [data-testid="stFileUploader"] button *,
+    [data-testid="stFileUploader"] section > button * {
+        color: var(--intel-text) !important;
+        opacity: 1 !important;
+    }
+
+    section[data-testid="stFileUploaderDropzone"] {
+        background: transparent !important;
+    }
+
+    [data-testid="stFileUploaderDropzoneInstructions"] span {
+        color: var(--intel-text) !important;
+        font-size: 0.82rem !important;
+        font-weight: 700 !important;
+    }
+
+    [data-testid="stFileUploaderDropzoneInstructions"] small {
+        color: var(--intel-faint) !important;
+    }
+
+    .stTextInput input,
+    .stNumberInput input,
+    .stTextArea textarea,
+    div[data-baseweb="select"] > div,
+    [data-baseweb="input"] input {
+        background: #0B0F15 !important;
+        color: var(--intel-text) !important;
+        border: 1px solid var(--intel-border) !important;
+        border-radius: 6px !important;
+        box-shadow: none !important;
+        font-size: 0.84rem !important;
+    }
+
+    .stTextInput input:focus,
+    .stNumberInput input:focus,
+    .stTextArea textarea:focus,
+    div[data-baseweb="select"] > div:focus-within {
+        border-color: var(--intel-blue) !important;
+        box-shadow: none !important;
+        outline: none !important;
+    }
+
+    div[data-baseweb="popover"] ul,
+    div[data-baseweb="popover"] div {
+        background: #0B0F15 !important;
+        border-color: var(--intel-border) !important;
+        color: var(--intel-text) !important;
+    }
+
+    div[data-baseweb="popover"] li:hover {
+        background: #151B24 !important;
+    }
+
+    .stTabs [data-baseweb="tab-list"] {
+        background: var(--intel-panel) !important;
+        border: 1px solid var(--intel-border) !important;
+        border-radius: 7px !important;
+        padding: 5px !important;
+        gap: 4px !important;
+    }
+
+    .stTabs [data-baseweb="tab"] {
+        color: var(--intel-muted) !important;
+        border-radius: 5px !important;
+        padding: 8px 12px !important;
+        font-size: 0.78rem !important;
+        font-weight: 700 !important;
+    }
+
+    .stTabs [aria-selected="true"] {
+        background: var(--intel-red) !important;
+        color: #090C12 !important;
+        border: 0 !important;
+        box-shadow: none !important;
+    }
+
+    .stDataFrame,
+    [data-testid="stTable"] {
+        background: var(--intel-panel) !important;
+        border: 1px solid var(--intel-border) !important;
+        border-radius: 7px !important;
+        box-shadow: none !important;
+        overflow: hidden !important;
+    }
+
+    table {
+        background: var(--intel-panel) !important;
+        color: var(--intel-text) !important;
+        border-collapse: collapse !important;
+    }
+
+    thead tr {
+        background: #0B0F15 !important;
+        border-bottom: 1px solid var(--intel-border) !important;
+    }
+
+    thead th {
+        color: var(--intel-faint) !important;
+        font-size: 0.74rem !important;
+        text-transform: uppercase;
+    }
+
+    tbody tr:nth-child(even),
+    tbody tr:nth-child(odd) {
+        background: var(--intel-panel) !important;
+    }
+
+    tbody tr {
+        border-bottom: 1px solid var(--intel-border-soft) !important;
+    }
+
+    tbody tr:hover {
+        background: #151B24 !important;
+        box-shadow: none !important;
+    }
+
+    tbody td {
+        color: var(--intel-text) !important;
+        font-size: 0.8rem !important;
+    }
+
+    .stProgress > div {
+        background: #1A222E !important;
+    }
+
+    .stProgress > div > div {
+        background: var(--intel-red) !important;
+        border-radius: 2px !important;
+        box-shadow: none !important;
+    }
+
+    .stSuccess {
+        border-left: 4px solid var(--intel-green) !important;
+    }
+
+    .stWarning {
+        border-left: 4px solid var(--intel-amber) !important;
+    }
+
+    .stError {
+        border-left: 4px solid var(--intel-red) !important;
+    }
+
+    .stInfo {
+        border-left: 4px solid var(--intel-blue) !important;
+    }
+
+    code, pre {
+        background: #0B0F15 !important;
+        color: var(--intel-amber) !important;
+        border: 1px solid var(--intel-border) !important;
+        border-radius: 4px !important;
+    }
+
+    ::selection {
+        background: var(--intel-red);
+        color: #090C12;
+    }
+
+    ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: var(--intel-bg);
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: #2A3341;
+        border: 2px solid var(--intel-bg);
+        border-radius: 8px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: var(--intel-red);
+        box-shadow: none;
+    }
+
     #sidebar-resizer:hover,
     #sidebar-resizer.active {
-        background: linear-gradient(180deg, rgba(0,245,255,0.7), rgba(139,92,246,0.7));
-        box-shadow: 0 0 12px rgba(0,245,255,0.6);
+        background: var(--intel-red) !important;
+        box-shadow: none !important;
+    }
+
+    @media (max-width: 768px) {
+        [data-testid="stAppViewBlockContainer"] {
+            padding: 18px !important;
+        }
+
+        .intel-page-header {
+            align-items: flex-start;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .intel-page-header h1,
+        h1 {
+            font-size: 1.8rem !important;
+        }
+
+        .intel-kicker {
+            font-size: 1.05rem;
+        }
     }
     </style>
-    <div id="sidebar-resizer"></div>
-    <script>
-    (function() {
-        const MIN_W = 200, MAX_W = 600;
-        const resizer = document.getElementById('sidebar-resizer');
-        if (!resizer || resizer.dataset.init) return;
-        resizer.dataset.init = '1';
-
-        function getSidebar() {
-            return document.querySelector('[data-testid="stSidebar"]');
-        }
-
-        function positionResizer() {
-            const sb = getSidebar();
-            if (!sb) return;
-            const r = sb.getBoundingClientRect();
-            resizer.style.left = (r.right - 3) + 'px';
-        }
-
-        // Restore saved width
-        const saved = localStorage.getItem('st_sidebar_w');
-        if (saved) {
-            const sb = getSidebar();
-            if (sb) {
-                sb.style.width = saved + 'px';
-                sb.style.minWidth = saved + 'px';
-                sb.style.maxWidth = saved + 'px';
-            }
-        }
-        positionResizer();
-
-        let dragging = false;
-        resizer.addEventListener('mousedown', function(e) {
-            dragging = true;
-            resizer.classList.add('active');
-            document.body.style.cursor = 'col-resize';
-            document.body.style.userSelect = 'none';
-            e.preventDefault();
-        });
-        document.addEventListener('mousemove', function(e) {
-            if (!dragging) return;
-            const sb = getSidebar();
-            if (!sb) return;
-            let w = Math.min(MAX_W, Math.max(MIN_W, e.clientX));
-            sb.style.width = w + 'px';
-            sb.style.minWidth = w + 'px';
-            sb.style.maxWidth = w + 'px';
-            resizer.style.left = (w - 3) + 'px';
-        });
-        document.addEventListener('mouseup', function() {
-            if (!dragging) return;
-            dragging = false;
-            resizer.classList.remove('active');
-            document.body.style.cursor = '';
-            document.body.style.userSelect = '';
-            const sb = getSidebar();
-            if (sb) localStorage.setItem('st_sidebar_w', parseInt(sb.style.width));
-        });
-
-        // Reposition on interval (handles Streamlit reruns)
-        setInterval(positionResizer, 500);
-    })();
-    </script>
     """, unsafe_allow_html=True)
+
+    _install_heading_patches()
+
+
+def _clean_display_text(value):
+    """Keep headings crisp by removing emoji/mojibake prefixes from legacy labels."""
+    ascii_text = ''.join(ch if 32 <= ord(ch) < 127 else ' ' for ch in str(value))
+    return ' '.join(ascii_text.split())
+
+
+def _get_time_greeting():
+    """Return a short greeting based on the local system time."""
+    hour = datetime.now().hour
+    if 5 <= hour < 12:
+        return "Good morning"
+    if 12 <= hour < 17:
+        return "Good afternoon"
+    return "Good evening"
+
+
+def _render_title_html(title):
+    """Render page titles with restrained theme accents."""
+    words = _clean_display_text(title).split()
+    if not words:
+        return ""
+
+    rendered = []
+    last_index = len(words) - 1
+    for index, word in enumerate(words):
+        if word.upper() == "MO":
+            class_name = "title-hot"
+        elif index == 0:
+            class_name = "title-base"
+        elif index == last_index:
+            class_name = "title-success"
+        else:
+            class_name = "title-focus"
+        rendered.append(f'<span class="{class_name}">{escape(word)}</span>')
+    return " ".join(rendered)
+
+
+def _install_heading_patches():
+    """Apply the DataLens heading system to every page module."""
+    if getattr(st, "_datalens_heading_patch_installed", False):
+        return
+
+    def themed_title(body, *args, **kwargs):
+        text = _clean_display_text(body)
+        if not text:
+            return None
+        st.markdown(
+            f'<h1 class="datalens-global-title">{_render_title_html(text)}</h1>',
+            unsafe_allow_html=True
+        )
+        return None
+
+    def themed_header(body, *args, **kwargs):
+        text = _clean_display_text(body)
+        if not text:
+            return None
+        st.markdown(
+            f'<h2 class="datalens-section-title">{escape(text)}</h2>',
+            unsafe_allow_html=True
+        )
+        return None
+
+    def themed_subheader(body, *args, **kwargs):
+        text = _clean_display_text(body)
+        if not text:
+            return None
+        st.markdown(
+            f'<h3 class="datalens-subsection-title">{escape(text)}</h3>',
+            unsafe_allow_html=True
+        )
+        return None
+
+    st._datalens_original_title = st.title
+    st._datalens_original_header = st.header
+    st._datalens_original_subheader = st.subheader
+    st.title = themed_title
+    st.header = themed_header
+    st.subheader = themed_subheader
+    st._datalens_heading_patch_installed = True
 
 
 def render_page_header_with_info(page_key):
@@ -1115,28 +2156,42 @@ def render_page_header_with_info(page_key):
         return
     
     info = PAGE_INFO[page_key]
+    title = _clean_display_text(info['title'])
+    description = _clean_display_text(info['description'])
+    greeting = _get_time_greeting()
+    title_html = _render_title_html(title)
+    slogan = "Cyber fraud intelligence for faster review and clear reports."
     
     # Create header with info button
-    col1, col2 = st.columns([0.95, 0.05])
+    col1, col2 = st.columns([0.88, 0.12])
     
     with col1:
-        st.title(info['title'])
-        st.markdown(f"*{info['description']}*")
+        st.markdown(f"""
+        <section class="intel-page-header">
+            <div>
+                <div class="intel-kicker">{escape(greeting)}</div>
+                <h1>{title_html}</h1>
+                <div class="intel-slogan">{escape(slogan)}</div>
+                <p>{escape(description)}</p>
+            </div>
+            <div class="intel-badge">Confidential Intelligence</div>
+        </section>
+        """, unsafe_allow_html=True)
     
     with col2:
         # Info button
-        if st.button("ℹ️", key=f"info_btn_{page_key}", help="Click for detailed information"):
+        if st.button("INFO", key=f"info_btn_{page_key}", help="Click for detailed information"):
             st.session_state[f'show_info_{page_key}'] = not st.session_state.get(f'show_info_{page_key}', False)
     
     # Show detailed info if button clicked
     if st.session_state.get(f'show_info_{page_key}', False):
-        with st.expander("📖 Detailed Information", expanded=True):
+        with st.expander("Detailed Information", expanded=True):
             st.markdown(info['details'])
-            if st.button("✖️ Close", key=f"close_info_{page_key}"):
+            if st.button("Close", key=f"close_info_{page_key}"):
                 st.session_state[f'show_info_{page_key}'] = False
                 st.rerun()
     
-    st.markdown("---")
+    st.markdown("")
 
 
 def render_feature_card(title, description, icon="📊"):
@@ -1153,5 +2208,31 @@ def render_feature_card(title, description, icon="📊"):
          onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 30px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1)'; this.style.borderColor='{COLORS['glass_border']}';">
         <h3 style="color: {COLORS['light_aqua']}; font-size: 1.4rem; margin-bottom: 12px; text-shadow: 0 0 10px rgba(0, 245, 255, 0.4);">{icon} {title}</h3>
         <p style="color: {COLORS['text_muted']}; font-size: 1.05rem; line-height: 1.6; margin: 0;">{description}</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+def render_feature_card(title, description, icon=""):
+    """Render a feature card using the cyber-intelligence report theme."""
+    title_text = escape(_clean_display_text(title))
+    description_text = escape(_clean_display_text(description))
+    icon_text = escape(_clean_display_text(icon))
+    prefix = f"{icon_text} " if icon_text else ""
+    st.markdown(f"""
+    <div style="background: {COLORS['background_card']};
+                border: 1px solid {COLORS['border']};
+                border-top: 3px solid {COLORS['light_aqua']};
+                border-radius: 7px;
+                padding: 18px;
+                margin-bottom: 18px;
+                box-shadow: none;">
+        <h3 style="color: {COLORS['text_primary']} !important;
+                   font-size: 0.95rem;
+                   margin: 0 0 8px 0;
+                   font-family: 'Space Mono', Consolas, monospace !important;">{prefix}{title_text}</h3>
+        <p style="color: {COLORS['text_secondary']} !important;
+                  font-size: 0.82rem;
+                  line-height: 1.55;
+                  margin: 0;">{description_text}</p>
     </div>
     """, unsafe_allow_html=True)
