@@ -3,7 +3,6 @@ UI Styling and Theme Configuration for DataLens for Cyber Cell
 Hyper-Premium Midnight Theme with Ultra Smooth Animations
 """
 
-from datetime import datetime
 from html import escape
 
 import streamlit as st
@@ -2076,13 +2075,8 @@ def _clean_display_text(value):
 
 
 def _get_time_greeting():
-    """Return a short greeting based on the local system time."""
-    hour = datetime.now().hour
-    if 5 <= hour < 12:
-        return "Good morning"
-    if 12 <= hour < 17:
-        return "Good afternoon"
-    return "Good evening"
+    """Return the fixed DataLens greeting."""
+    return "Hi, let's make the numbers talk."
 
 
 def _render_title_html(title):
