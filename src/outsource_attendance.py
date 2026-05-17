@@ -1492,7 +1492,27 @@ def get_attendance_service() -> AttendanceService:
     mongodb_uri = _get_config_value(MONGODB_URI_ENV_VAR)
     if mongodb_uri:
         database_name = _get_config_value(MONGODB_DATABASE_ENV_VAR, DEFAULT_MONGODB_DATABASE)
-        return MongoAttendanceService(mongodb_uri, database_name)
+        try:
+            return MongoAttendanceService(mongodb_uri, database_name)
+        except PyMongoError as exc:
+            st.error("MongoDB Atlas connection failed.")
+            st.warning(
+                "Open MongoDB Atlas > Network Access and add 0.0.0.0/0, "
+                "then wait a minute and reboot the Streamlit app."
+            )
+            st.caption(
+                "Also confirm Streamlit Secrets has MONGODB_URI with the real password, "
+                "not <db_password>."
+            )
+            st.code(
+                'MONGODB_URI = "mongodb+srv://helplinecyber618_db_user:YOUR_PASSWORD@'
+                'cluster0.drj3x4z.mongodb.net/?appName=Cluster0"\n'
+                'MONGODB_DATABASE = "attendance_db"\n'
+                'DATALENS_ATTENDANCE_ADMIN_PASSWORD = "admin123"',
+                language="toml",
+            )
+            st.caption(f"Technical detail: {exc.__class__.__name__}")
+            st.stop()
     return AttendanceService()
 
 
