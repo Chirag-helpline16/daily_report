@@ -249,22 +249,6 @@ def render_sidebar():
                 background: #1E3328 !important;
                 border-color: #FF9F0A !important;
             }
-            [class*="st-key-top_nav_"] button {
-                background: #111820 !important;
-                border: 1px solid #263243 !important;
-                border-left: 4px solid #2F80FF !important;
-                color: #F8F3EA !important;
-                font-weight: 700 !important;
-            }
-            [class*="st-key-top_nav_top_10_suspect"] button {
-                border-left-color: #F04348 !important;
-            }
-            [class*="st-key-top_nav_csv_fixer"] button {
-                border-left-color: #21C16B !important;
-            }
-            [class*="st-key-top_nav_call_notice_merge"] button {
-                border-left-color: #FF9F0A !important;
-            }
             </style>
             """,
             unsafe_allow_html=True,
@@ -282,16 +266,14 @@ def render_sidebar():
         st.caption("Password-protected attendance workflow.")
         st.markdown("---")
 
-        sidebar_section_title("Top Pages")
-        for page_key in top_page_keys:
-            if st.button(page_label(page_key), key=f"top_nav_{page_key}", use_container_width=True):
-                st.session_state.current_page = page_key
-                st.rerun()
-        st.markdown("---")
-
         sidebar_section_title("All Pages")
-        for page_key, page_name in pages.items():
-            if page_key in attendance_page_keys or page_key in top_page_keys:
+        ordered_page_keys = top_page_keys + [
+            page_key
+            for page_key in pages.keys()
+            if page_key not in attendance_page_keys and page_key not in top_page_keys
+        ]
+        for page_key in ordered_page_keys:
+            if page_key in attendance_page_keys:
                 continue
             page_name = page_label(page_key)
             if st.button(page_name, key=f"nav_{page_key}", use_container_width=True):
