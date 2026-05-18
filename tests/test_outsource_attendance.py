@@ -115,6 +115,24 @@ def test_pending_filter_only_includes_entries_with_no_decision(tmp_path):
     assert pending["id"].tolist() == [pending_entry]
 
 
+def test_login_ip_address_is_stored_and_exported(tmp_path):
+    service = AttendanceService(tmp_path / "attendance.sqlite")
+    outsource_id = service.add_user("IP Audit User", "outsource", "9876543219")
+
+    service.submit_login(
+        outsource_id,
+        "pc-ip",
+        login_at=datetime(2026, 5, 7, 10, 30, tzinfo=IST),
+        ip_address="203.0.113.10",
+    )
+
+    entries = service.list_entries(month="2026-05")
+    raw = service.build_raw_attendance_df("2026-05")
+
+    assert entries.iloc[0]["ip_address"] == "203.0.113.10"
+    assert raw.iloc[0]["IP Address"] == "203.0.113.10"
+
+
 def test_export_workbook_contains_attendance_sheets(tmp_path):
     service = AttendanceService(tmp_path / "attendance.sqlite")
     outsource_id = service.add_user("Neha Vendor", "outsource", "9876543213")

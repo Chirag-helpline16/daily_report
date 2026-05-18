@@ -98,6 +98,28 @@ def _clean_pc_name(value: str) -> str:
     return " ".join(str(value or "").strip().upper().split())
 
 
+def _clean_ip_address(value: Any) -> str:
+    return " ".join(str(value or "").strip().split())
+
+
+def get_client_ip_address() -> str:
+    """Best-effort client IP capture for Streamlit sessions."""
+    try:
+        direct_ip = _clean_ip_address(getattr(st.context, "ip_address", ""))
+        if direct_ip:
+            return direct_ip
+
+        headers = getattr(st.context, "headers", {}) or {}
+        header_map = {str(key).lower(): value for key, value in dict(headers).items()}
+        for header_name in ("x-forwarded-for", "x-real-ip", "cf-connecting-ip"):
+            header_value = _clean_ip_address(header_map.get(header_name, ""))
+            if header_value:
+                return _clean_ip_address(header_value.split(",")[0])
+    except Exception:
+        return ""
+    return ""
+
+
 def _coerce_ist(moment: datetime | None) -> datetime:
     if moment is None:
         return now_ist()
@@ -191,6 +213,7 @@ class AttendanceService:
                     outsource_user_id INTEGER NOT NULL,
                     outsource_name TEXT NOT NULL,
                     pc_name TEXT NOT NULL,
+                    ip_address TEXT,
                     login_time_ist TEXT NOT NULL,
                     login_date TEXT NOT NULL,
                     shift_code TEXT NOT NULL,
@@ -233,6 +256,7 @@ class AttendanceService:
                 """
             )
             self._migrate_user_columns(conn)
+            self._migrate_login_entry_columns(conn)
 
     def _migrate_user_columns(self, conn: sqlite3.Connection) -> None:
         existing_columns = {
@@ -258,6 +282,14 @@ class AttendanceService:
             WHERE normalized_mobile IS NOT NULL AND normalized_mobile <> ''
             """
         )
+
+    def _migrate_login_entry_columns(self, conn: sqlite3.Connection) -> None:
+        existing_columns = {
+            row["name"]
+            for row in conn.execute("PRAGMA table_info(login_entries)").fetchall()
+        }
+        if "ip_address" not in existing_columns:
+            conn.execute("ALTER TABLE login_entries ADD COLUMN ip_address TEXT")
 
     def _log_event(
         self,
@@ -597,6 +629,7 @@ class AttendanceService:
         outsource_user_id: int,
         pc_name: str,
         login_at: datetime | None = None,
+        ip_address: str = "",
     ) -> int:
         """Submit a login entry from the outsource page."""
         clean_pc = _clean_pc_name(pc_name)
@@ -606,6 +639,7 @@ class AttendanceService:
         login_time = _coerce_ist(login_at)
         shift_code, shift_name = classify_shift(login_time)
         timestamp = _timestamp()
+        clean_ip = _clean_ip_address(ip_address)
 
         with self._connect() as conn:
             user = conn.execute(
@@ -621,15 +655,16 @@ class AttendanceService:
             cursor = conn.execute(
                 """
                 INSERT INTO login_entries (
-                    outsource_user_id, outsource_name, pc_name, login_time_ist,
+                    outsource_user_id, outsource_name, pc_name, ip_address, login_time_ist,
                     login_date, shift_code, shift_name, created_at
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     int(user["id"]),
                     user["name"],
                     clean_pc,
+                    clean_ip,
                     login_time.isoformat(timespec="seconds"),
                     login_time.date().isoformat(),
                     shift_code,
@@ -645,7 +680,7 @@ class AttendanceService:
                 actor_name=user["name"],
                 entry_id=entry_id,
                 user_id=int(user["id"]),
-                details=f"{user['name']} submitted login from {clean_pc} as {shift_code}",
+                details=f"{user['name']} submitted login from {clean_pc} as {shift_code} IP {clean_ip or 'unknown'}",
             )
             return entry_id
 
@@ -734,6 +769,7 @@ class AttendanceService:
                 e.outsource_name,
                 COALESCE(u.active, 0) AS outsource_active,
                 e.pc_name,
+                e.ip_address,
                 e.login_time_ist,
                 e.login_date,
                 e.shift_code,
@@ -821,6 +857,7 @@ class AttendanceService:
                     "Entry ID",
                     "Outsource Name",
                     "PC Name",
+                    "IP Address",
                     "Login Time (IST)",
                     "Login Date",
                     "Shift",
@@ -837,12 +874,15 @@ class AttendanceService:
             )
 
         raw = entries.copy()
+        if "ip_address" not in raw.columns:
+            raw["ip_address"] = ""
         raw["Shift"] = raw["shift_code"] + " - " + raw["shift_name"]
         raw = raw.rename(
             columns={
                 "id": "Entry ID",
                 "outsource_name": "Outsource Name",
                 "pc_name": "PC Name",
+                "ip_address": "IP Address",
                 "login_time_ist": "Login Time (IST)",
                 "login_date": "Login Date",
                 "observer_status": "Observer Status",
@@ -861,6 +901,7 @@ class AttendanceService:
                 "Entry ID",
                 "Outsource Name",
                 "PC Name",
+                "IP Address",
                 "Login Time (IST)",
                 "Login Date",
                 "Shift",
@@ -1351,6 +1392,7 @@ class MongoAttendanceService(AttendanceService):
         outsource_user_id: int,
         pc_name: str,
         login_at: datetime | None = None,
+        ip_address: str = "",
     ) -> int:
         clean_pc = _clean_pc_name(pc_name)
         if not clean_pc:
@@ -1362,12 +1404,14 @@ class MongoAttendanceService(AttendanceService):
         login_time = _coerce_ist(login_at)
         shift_code, shift_name = classify_shift(login_time)
         entry_id = self._next_id("login_entries")
+        clean_ip = _clean_ip_address(ip_address)
         self.entries.insert_one(
             {
                 "id": entry_id,
                 "outsource_user_id": int(user["id"]),
                 "outsource_name": user["name"],
                 "pc_name": clean_pc,
+                "ip_address": clean_ip,
                 "login_time_ist": login_time.isoformat(timespec="seconds"),
                 "login_date": login_time.date().isoformat(),
                 "shift_code": shift_code,
@@ -1390,7 +1434,7 @@ class MongoAttendanceService(AttendanceService):
             actor_name=user["name"],
             entry_id=entry_id,
             user_id=int(user["id"]),
-            details=f"{user['name']} submitted login from {clean_pc} as {shift_code}",
+            details=f"{user['name']} submitted login from {clean_pc} as {shift_code} IP {clean_ip or 'unknown'}",
         )
         return entry_id
 
@@ -1530,17 +1574,20 @@ def _status_title(value: Any) -> str:
     return str(value).replace("_", " ").title()
 
 
-def _display_entries(df: pd.DataFrame) -> pd.DataFrame:
+def _display_entries(df: pd.DataFrame, include_ip: bool = False) -> pd.DataFrame:
     if df.empty:
-        return _empty_entries_display()
+        return _empty_entries_display(include_ip=include_ip)
 
     display = df.copy()
+    if "ip_address" not in display.columns:
+        display["ip_address"] = ""
     display["Shift"] = display["shift_code"] + " - " + display["shift_name"]
     display = display.rename(
         columns={
             "id": "Entry ID",
             "outsource_name": "Outsource Name",
             "pc_name": "PC Name",
+            "ip_address": "IP Address",
             "login_time_ist": "Login Time (IST)",
             "login_date": "Login Date",
             "observer_status": "Observer Status",
@@ -1558,6 +1605,10 @@ def _display_entries(df: pd.DataFrame) -> pd.DataFrame:
         "Entry ID",
         "Outsource Name",
         "PC Name",
+    ]
+    if include_ip:
+        columns.append("IP Address")
+    columns.extend([
         "Login Time (IST)",
         "Login Date",
         "Shift",
@@ -1570,19 +1621,22 @@ def _display_entries(df: pd.DataFrame) -> pd.DataFrame:
         "Admin By",
         "Admin Remarks",
         "Final Remarks",
-    ]
+    ])
     for column in ["Observer Status", "Admin Override", "Final Status", "Decision Source"]:
         display[column] = display[column].map(_status_title)
     display["Admin Override"] = display["Admin Override"].replace("", "No override")
     return display[columns].fillna("")
 
 
-def _empty_entries_display() -> pd.DataFrame:
-    return pd.DataFrame(
-        columns=[
+def _empty_entries_display(include_ip: bool = False) -> pd.DataFrame:
+    columns = [
             "Entry ID",
             "Outsource Name",
             "PC Name",
+        ]
+    if include_ip:
+        columns.append("IP Address")
+    columns.extend([
             "Login Time (IST)",
             "Login Date",
             "Shift",
@@ -1595,8 +1649,8 @@ def _empty_entries_display() -> pd.DataFrame:
             "Admin By",
             "Admin Remarks",
             "Final Remarks",
-        ]
-    )
+    ])
+    return pd.DataFrame(columns=columns)
 
 
 def _entry_options(df: pd.DataFrame) -> dict[str, int]:
@@ -1808,7 +1862,9 @@ def render_attendance_admin_page() -> None:
             outsource_user_id=outsource_options[outsource_name],
         )
         st.dataframe(
-            _display_entries(entries) if not entries.empty else _empty_entries_display(),
+            _display_entries(entries, include_ip=True)
+            if not entries.empty
+            else _empty_entries_display(include_ip=True),
             use_container_width=True,
             hide_index=True,
         )
@@ -2087,7 +2143,11 @@ def render_outsource_login_page() -> None:
         submitted = st.form_submit_button("Submit Login", type="primary", use_container_width=True)
         if submitted:
             try:
-                entry_id = service.submit_login(int(auth["id"]), pc_name)
+                entry_id = service.submit_login(
+                    int(auth["id"]),
+                    pc_name,
+                    ip_address=get_client_ip_address(),
+                )
                 st.success(f"Login submitted. Entry ID: {entry_id}")
             except ValueError as exc:
                 st.error(str(exc))
