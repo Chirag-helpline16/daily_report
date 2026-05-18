@@ -876,6 +876,7 @@ class AttendanceService:
         raw = entries.copy()
         if "ip_address" not in raw.columns:
             raw["ip_address"] = ""
+        raw["ip_address"] = raw["ip_address"].map(_display_ip_address)
         raw["Shift"] = raw["shift_code"] + " - " + raw["shift_name"]
         raw = raw.rename(
             columns={
@@ -1574,6 +1575,11 @@ def _status_title(value: Any) -> str:
     return str(value).replace("_", " ").title()
 
 
+def _display_ip_address(value: Any) -> str:
+    clean_ip = _clean_ip_address(value)
+    return clean_ip if clean_ip else "Not captured"
+
+
 def _display_entries(df: pd.DataFrame, include_ip: bool = False) -> pd.DataFrame:
     if df.empty:
         return _empty_entries_display(include_ip=include_ip)
@@ -1625,6 +1631,8 @@ def _display_entries(df: pd.DataFrame, include_ip: bool = False) -> pd.DataFrame
     for column in ["Observer Status", "Admin Override", "Final Status", "Decision Source"]:
         display[column] = display[column].map(_status_title)
     display["Admin Override"] = display["Admin Override"].replace("", "No override")
+    if include_ip:
+        display["IP Address"] = display["IP Address"].map(_display_ip_address)
     return display[columns].fillna("")
 
 
@@ -1653,12 +1661,15 @@ def _empty_entries_display(include_ip: bool = False) -> pd.DataFrame:
     return pd.DataFrame(columns=columns)
 
 
-def _entry_options(df: pd.DataFrame) -> dict[str, int]:
+def _entry_options(df: pd.DataFrame, include_ip: bool = False) -> dict[str, int]:
     options: dict[str, int] = {}
     for _, row in df.iterrows():
+        ip_part = ""
+        if include_ip:
+            ip_part = f" | IP {_display_ip_address(row.get('ip_address', ''))}"
         label = (
             f"#{row['id']} | {row['outsource_name']} | {row['pc_name']} | "
-            f"{row['login_time_ist']} | {_status_title(row['effective_status'])}"
+            f"{row['login_time_ist']}{ip_part} | {_status_title(row['effective_status'])}"
         )
         options[label] = int(row["id"])
     return options
@@ -1783,13 +1794,37 @@ def _render_decision_form(
     actor_role: str,
     actor_name: str,
     key_prefix: str,
+    show_ip: bool = False,
 ) -> None:
     if entries.empty:
         st.info("No entries available for decision.")
         return
 
-    options = _entry_options(entries)
+    options = _entry_options(entries, include_ip=show_ip)
     selected_label = st.selectbox("Select entry", options=list(options.keys()), key=f"{key_prefix}_entry")
+    selected_entry_id = options[selected_label]
+    selected_rows = entries[entries["id"] == selected_entry_id]
+    if show_ip and not selected_rows.empty:
+        selected_row = selected_rows.iloc[0]
+        ip_col, pc_col, user_col = st.columns(3)
+        ip_col.text_input(
+            "Selected IP address",
+            value=_display_ip_address(selected_row.get("ip_address", "")),
+            disabled=True,
+            key=f"{key_prefix}_selected_ip",
+        )
+        pc_col.text_input(
+            "Selected PC",
+            value=str(selected_row.get("pc_name") or ""),
+            disabled=True,
+            key=f"{key_prefix}_selected_pc",
+        )
+        user_col.text_input(
+            "Selected outsource user",
+            value=str(selected_row.get("outsource_name") or ""),
+            disabled=True,
+            key=f"{key_prefix}_selected_user",
+        )
     decision_label = st.radio(
         "Decision",
         options=["Accepted", "Rejected"],
@@ -1804,7 +1839,7 @@ def _render_decision_form(
     if st.button("Save Decision", type="primary", use_container_width=True, key=f"{key_prefix}_save"):
         try:
             service.decide_entry(
-                entry_id=options[selected_label],
+                entry_id=selected_entry_id,
                 decision=decision_label.lower(),
                 actor_role=actor_role,
                 actor_name=actor_name,
@@ -1861,6 +1896,10 @@ def render_attendance_admin_page() -> None:
             status_filter=status,
             outsource_user_id=outsource_options[outsource_name],
         )
+        if not entries.empty:
+            ip_values = entries["ip_address"] if "ip_address" in entries.columns else pd.Series([""] * len(entries))
+            ip_captured = ip_values.fillna("").astype(str).str.strip().astype(bool).sum()
+            st.caption(f"IP captured for {ip_captured} of {len(entries)} visible entries. Old entries may show Not captured.")
         st.dataframe(
             _display_entries(entries, include_ip=True)
             if not entries.empty
@@ -1879,6 +1918,7 @@ def render_attendance_admin_page() -> None:
             actor_role="admin",
             actor_name=auth["name"],
             key_prefix="admin_decision",
+            show_ip=True,
         )
 
     with tabs[1]:
