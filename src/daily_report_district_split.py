@@ -111,7 +111,7 @@ def _column_selection_value(label: str, columns: list[str], suggested: str | Non
 
 def render_daily_report_district_split_page():
     """Render the Daily Report District Split page."""
-    st.title("Dailly Reports Suspect District Suspect")
+    st.title("Dailly Reports Split Suspect District Gujarat")
     st.markdown(
         "Upload a daily report file and split it into Gujarat district-wise Excel files using "
         "IFSC lookup first, then pincode fallback."

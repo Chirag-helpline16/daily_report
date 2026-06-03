@@ -172,7 +172,7 @@ def render_sidebar():
         }
         pages = dict(
             list(pages.items())[:6]
-            + [('daily_report_district_split', 'Dailly Reports Suspect District Suspect')]
+            + [('daily_report_district_split', 'Dailly Reports Split Suspect District Gujarat')]
             + list(pages.items())[6:]
         )
 
@@ -211,7 +211,7 @@ def render_sidebar():
             'view_database': 'View Database'
         }
 
-        clean_page_names['daily_report_district_split'] = 'Dailly Reports Suspect District Suspect'
+        clean_page_names['daily_report_district_split'] = 'Dailly Reports Split Suspect District Gujarat'
 
         valid_page_keys = list(pages.keys())
         attendance_page_keys = ['attendance_admin', 'attendance_observer', 'outsource_login']
