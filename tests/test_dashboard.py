@@ -357,21 +357,23 @@ class TestCalculateStatistics:
         assert stats.total_input_rows == 100
         assert stats.rows_with_errors == 5
     
-    def test_top_accounts_limited_to_10(self, dashboard):
-        """Test that top_accounts_by_amount is limited to 10."""
+    def test_top_accounts_limited_to_20(self, dashboard):
+        """Test that top_accounts_by_amount is limited to 20."""
         accounts = [
             AggregatedAccount(
                 account_number=f"12345678901{i}",
                 bank_name="Test Bank",
                 ifsc_code="TEST0001234",
                 address="Test Address",
+                district="Test District",
+                state="Test State",
                 total_transactions=i,
                 acknowledgement_numbers=f"ACK{i}",
                 total_amount=float(i * 1000),
                 total_disputed_amount=0.0,
                 risk_score=50.0
             )
-            for i in range(1, 21)  # 20 accounts
+            for i in range(1, 26)  # 25 accounts
         ]
         
         stats = dashboard.calculate_statistics(
@@ -380,7 +382,7 @@ class TestCalculateStatistics:
             input_filename="test.xlsx"
         )
         
-        assert len(stats.top_accounts_by_amount) == 10
+        assert len(stats.top_accounts_by_amount) == 20
         # Verify they are sorted by amount descending
         for i in range(len(stats.top_accounts_by_amount) - 1):
             assert stats.top_accounts_by_amount[i].total_amount >= \

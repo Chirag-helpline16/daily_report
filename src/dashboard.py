@@ -55,9 +55,9 @@ class Dashboard:
         # Calculate average
         average_amount = total_fraud_amount / unique_accounts if unique_accounts > 0 else 0.0
         
-        # Get top 10 accounts by amount
+        # Get top 20 accounts by amount
         sorted_accounts = sorted(accounts, key=lambda x: -x.total_amount)
-        top_accounts = sorted_accounts[:10]
+        top_accounts = sorted_accounts[:20]
         
         return ProcessingStats(
             total_input_rows=total_input_rows,

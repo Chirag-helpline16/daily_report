@@ -142,7 +142,7 @@ def render_sidebar():
             'attendance_observer': 'Observer Approvals',
             'outsource_login': 'Outsource Login',
             'district_download': '📍 Victim-Suspect Mapping & Filter by State/District',
-            'top_10_suspect': '🎯 Top 10 Suspect Accounts from Layer 1',
+            'top_10_suspect': '🎯 Top 20 Suspect Accounts from Layer 1',
             'districtwise': '📊 Split Data by Column',
             'smart_district_split': '🗺️ Smart District Split',
             'ifsc_pincode_split': '🏦 Split Excel Districtwise by IFSC/PIN Code',
@@ -182,7 +182,7 @@ def render_sidebar():
             'attendance_observer': 'Observer Approvals',
             'outsource_login': 'Outsource Login',
             'district_download': 'Victim-Suspect Mapping',
-            'top_10_suspect': 'Top 10 Suspect Accounts',
+            'top_10_suspect': 'Top 20 Suspect Accounts',
             'districtwise': 'Split Data by Column',
             'smart_district_split': 'Smart District Split',
             'ifsc_pincode_split': 'IFSC/PIN District Split',
@@ -936,15 +936,15 @@ def render_results_page():
     
     st.markdown("---")
     
-    # Top 10 Accounts
-    st.subheader("🏆 Top 10 Accounts by Amount")
+    # Top 20 Accounts
+    st.subheader("🏆 Top 20 Accounts by Amount")
     
-    top_10 = filtered_accounts[:10] if len(filtered_accounts) >= 10 else filtered_accounts
+    top_accounts = filtered_accounts[:20] if len(filtered_accounts) >= 20 else filtered_accounts
     
-    if top_10:
-        top_10_data = []
-        for i, acc in enumerate(top_10, 1):
-            top_10_data.append({
+    if top_accounts:
+        top_accounts_data = []
+        for i, acc in enumerate(top_accounts, 1):
+            top_accounts_data.append({
                 "Rank": i,
                 "Account Number": acc.account_number,
                 "Bank Name": acc.bank_name,
@@ -955,7 +955,7 @@ def render_results_page():
             })
         
         st.dataframe(
-            pd.DataFrame(top_10_data),
+            pd.DataFrame(top_accounts_data),
             use_container_width=True,
             hide_index=True
         )

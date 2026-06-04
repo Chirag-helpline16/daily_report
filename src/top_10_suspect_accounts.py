@@ -1,7 +1,7 @@
 """
-Top 10 Suspect Accounts Module.
+Top 20 Suspect Accounts Module.
 
-Generates a report of top 10 accounts by disputed amount with automatic filtering.
+Generates a report of top 20 accounts by disputed amount with automatic filtering.
 """
 
 import streamlit as st
@@ -18,10 +18,13 @@ from src.aggregation_engine import AggregationEngine
 from src.models import ColumnMapping
 
 
+SUSPECT_ACCOUNT_LIMIT = 20
+
+
 def render_top_10_suspect_accounts_page():
-    """Render the Top 10 Suspect Accounts page."""
-    st.title("🎯 Top 10 Suspect Accounts from Layer 1")
-    st.markdown("Automatically generates top 10 accounts by disputed amount with bank filtering")
+    """Render the Top 20 Suspect Accounts page."""
+    st.title("🎯 Top 20 Suspect Accounts from Layer 1")
+    st.markdown("Automatically generates top 20 accounts by disputed amount with bank filtering")
     
     st.markdown("---")
     
@@ -98,13 +101,17 @@ def render_top_10_suspect_accounts_page():
             aggregated = aggregation_engine.aggregate_by_account(cleaned_df, mapping)
             sorted_accounts = aggregation_engine.sort_results(aggregated)
             
-            # STEP 3: Get top 10 by disputed amount
-            st.info("🎯 Selecting top 10 accounts by disputed amount...")
+            # STEP 3: Get top accounts by disputed amount
+            st.info(f"🎯 Selecting top {SUSPECT_ACCOUNT_LIMIT} accounts by disputed amount...")
             
-            # Sort by disputed amount (descending) and take top 10
-            top_10 = sorted(sorted_accounts, key=lambda x: x.total_disputed_amount, reverse=True)[:10]
+            # Sort by disputed amount (descending) and take the configured limit
+            top_accounts = sorted(
+                sorted_accounts,
+                key=lambda x: x.total_disputed_amount,
+                reverse=True
+            )[:SUSPECT_ACCOUNT_LIMIT]
             
-            st.success(f"✅ Top 10 accounts selected (Total disputed: ₹{sum(acc.total_disputed_amount for acc in top_10):,.2f})")
+            st.success(f"✅ Top {SUSPECT_ACCOUNT_LIMIT} accounts selected (Total disputed: ₹{sum(acc.total_disputed_amount for acc in top_accounts):,.2f})")
             
             # STEP 4: Generate Excel file
             st.info("📄 Generating Excel report...")
@@ -112,20 +119,20 @@ def render_top_10_suspect_accounts_page():
             # Get yesterday's date
             yesterday = datetime.now() - timedelta(days=1)
             date_str = yesterday.strftime("%d-%m-%Y")
-            filename = f"{date_str} Top 10 Suspect Accounts  from Layer 1.xlsx"
+            filename = f"{date_str} Top {SUSPECT_ACCOUNT_LIMIT} Suspect Accounts  from Layer 1.xlsx"
             
             # Create Excel file
-            excel_bytes = generate_top_10_excel(top_10, date_str)
+            excel_bytes = generate_top_10_excel(top_accounts, date_str)
             
             st.success("✅ Report generated successfully!")
             
             # Show summary
             st.markdown("---")
-            st.subheader("📊 Top 10 Accounts Summary")
+            st.subheader(f"📊 Top {SUSPECT_ACCOUNT_LIMIT} Accounts Summary")
             
             # Display summary table
             summary_data = []
-            for i, acc in enumerate(top_10, 1):
+            for i, acc in enumerate(top_accounts, 1):
                 summary_data.append({
                     "Rank": i,
                     "Account No.": acc.account_number,
@@ -157,12 +164,12 @@ def render_top_10_suspect_accounts_page():
 
 def generate_top_10_excel(accounts, date_str):
     """
-    Generate Excel file for top 10 suspect accounts.
+    Generate Excel file for top suspect accounts.
     
     Uses the same format as aggregated by account output.
     
     Args:
-        accounts: List of top 10 AggregatedAccount objects
+        accounts: List of AggregatedAccount objects
         date_str: Date string for the title
         
     Returns:
@@ -171,7 +178,7 @@ def generate_top_10_excel(accounts, date_str):
     # Create workbook
     wb = Workbook()
     ws = wb.active
-    ws.title = "Top 10 Suspect Accounts"
+    ws.title = f"Top {SUSPECT_ACCOUNT_LIMIT} Suspect Accounts"
     
     # Define styles
     title_font = Font(name='Calibri', size=14, bold=True, color="FFFFFF")
@@ -196,7 +203,7 @@ def generate_top_10_excel(accounts, date_str):
     # Title row
     ws.merge_cells('A1:L1')
     title_cell = ws['A1']
-    title_cell.value = f"{date_str} Top 10 Suspect Accounts from Layer 1"
+    title_cell.value = f"{date_str} Top {SUSPECT_ACCOUNT_LIMIT} Suspect Accounts from Layer 1"
     title_cell.font = title_font
     title_cell.fill = title_fill
     title_cell.alignment = center_align
