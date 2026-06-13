@@ -262,7 +262,10 @@ def generate_top_10_excel(accounts, date_str):
         # ACK Count
         cell = ws.cell(row=row_idx, column=4)
         # Count the number of ACK numbers (semicolon-separated)
-        ack_count = len([ack for ack in account.acknowledgement_numbers.split(';') if ack.strip()]) if account.acknowledgement_numbers else 0
+        ack_numbers = "" if account.acknowledgement_numbers is None else str(account.acknowledgement_numbers).strip()
+        if ack_numbers.lower() in {"nan", "none", "<na>", "nat"}:
+            ack_numbers = ""
+        ack_count = len([ack for ack in ack_numbers.split(';') if ack.strip()]) if ack_numbers else 0
         cell.value = ack_count
         cell.font = normal_font
         cell.alignment = center_align

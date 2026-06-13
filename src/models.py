@@ -8,7 +8,26 @@ processing statistics, and error responses.
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
+import re
 from typing import Any, Dict, List, Optional
+
+
+_ILLEGAL_EXCEL_CHARS_RE = re.compile(r"[\x00-\x08\x0B-\x0C\x0E-\x1F]")
+
+
+def _clean_text_value(value: Any) -> str:
+    """Convert spreadsheet scalar values to safe display text."""
+    if value is None:
+        return ""
+    try:
+        if value != value:
+            return ""
+    except Exception:
+        pass
+    text = str(value).strip()
+    if text.lower() in {"nan", "none", "<na>", "nat"}:
+        return ""
+    return _ILLEGAL_EXCEL_CHARS_RE.sub("", text)
 
 
 class ErrorCategory(Enum):
@@ -51,13 +70,22 @@ class AggregatedAccount:
     bank_name: str
     ifsc_code: str
     address: str
-    district: str
-    state: str
-    total_transactions: int
-    acknowledgement_numbers: str  # semicolon-separated
-    total_amount: float
-    total_disputed_amount: float
-    risk_score: float
+    district: str = ""
+    state: str = ""
+    total_transactions: int = 0
+    acknowledgement_numbers: str = ""  # semicolon-separated
+    total_amount: float = 0.0
+    total_disputed_amount: float = 0.0
+    risk_score: float = 0.0
+
+    def __post_init__(self) -> None:
+        self.account_number = _clean_text_value(self.account_number)
+        self.bank_name = _clean_text_value(self.bank_name)
+        self.ifsc_code = _clean_text_value(self.ifsc_code)
+        self.address = _clean_text_value(self.address)
+        self.district = _clean_text_value(self.district)
+        self.state = _clean_text_value(self.state)
+        self.acknowledgement_numbers = _clean_text_value(self.acknowledgement_numbers)
 
 
 @dataclass

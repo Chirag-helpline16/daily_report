@@ -9,9 +9,13 @@ from datetime import datetime
 from typing import List, Optional
 import csv
 import io
+import re
 import pandas as pd
 
 from src.models import AggregatedAccount, ProcessingStats
+
+
+_ILLEGAL_EXCEL_CHARS_RE = re.compile(r"[\x00-\x08\x0B-\x0C\x0E-\x1F]")
 
 
 class ReportGenerator:
@@ -32,6 +36,33 @@ class ReportGenerator:
         "Total Disputed Amount",
         "Risk Score"
     ]
+
+    @staticmethod
+    def _safe_text(value) -> str:
+        if value is None:
+            return ""
+        try:
+            if value != value:
+                return ""
+        except Exception:
+            pass
+        text = str(value).strip()
+        if text.lower() in {"nan", "none", "<na>", "nat"}:
+            return ""
+        return _ILLEGAL_EXCEL_CHARS_RE.sub("", text)
+
+    @classmethod
+    def _ack_count(cls, ack_numbers) -> int:
+        ack_text = cls._safe_text(ack_numbers)
+        if not ack_text:
+            return 0
+        ack_text = ack_text.replace(';', ',')
+        return len([a.strip() for a in ack_text.split(',') if a.strip()])
+
+    @classmethod
+    def _truncate_text(cls, value, max_length: int) -> str:
+        text = cls._safe_text(value)
+        return text[:max_length] + "..." if len(text) > max_length else text
     
     def _accounts_to_dataframe(
         self, 
@@ -51,25 +82,17 @@ class ReportGenerator:
         
         data = []
         for account in accounts:
-            # Count ACK numbers by splitting the string
-            # Handle both comma and semicolon separators
-            ack_numbers = account.acknowledgement_numbers
-            if ack_numbers and ack_numbers.strip():
-                # Replace semicolons with commas, then split
-                ack_str = ack_numbers.replace(';', ',')
-                ack_count = len([a.strip() for a in ack_str.split(',') if a.strip()])
-            else:
-                ack_count = 0
+            ack_count = self._ack_count(account.acknowledgement_numbers)
             
             data.append({
-                "Fraudster Bank Account Number": account.account_number,
-                "All Acknowledgement Numbers": account.acknowledgement_numbers,
+                "Fraudster Bank Account Number": self._safe_text(account.account_number),
+                "All Acknowledgement Numbers": self._safe_text(account.acknowledgement_numbers),
                 "ACK Count": ack_count,
-                "Bank Name": account.bank_name,
-                "IFSC Code": account.ifsc_code,
-                "Address": account.address,
-                "District": account.district,
-                "State": account.state,
+                "Bank Name": self._safe_text(account.bank_name),
+                "IFSC Code": self._safe_text(account.ifsc_code),
+                "Address": self._safe_text(account.address),
+                "District": self._safe_text(account.district),
+                "State": self._safe_text(account.state),
                 "Total Transactions": account.total_transactions,
                 "Total Amount": account.total_amount,
                 "Total Disputed Amount": account.total_disputed_amount,
@@ -431,9 +454,9 @@ class ReportGenerator:
             # Add account rows
             for account in top_accounts:
                 table_data.append([
-                    account.account_number,
-                    account.bank_name[:20] + "..." if len(account.bank_name) > 20 else account.bank_name,
-                    account.ifsc_code,
+                    self._safe_text(account.account_number),
+                    self._truncate_text(account.bank_name, 20),
+                    self._safe_text(account.ifsc_code),
                     str(account.total_transactions),
                     f"₹{account.total_amount:,.2f}",
                     f"{account.risk_score:.1f}"
@@ -599,9 +622,9 @@ class ReportGenerator:
             for i, account in enumerate(top_accounts, 1):
                 table_data.append([
                     str(i),
-                    account.account_number,
-                    account.bank_name[:25] + "..." if len(account.bank_name) > 25 else account.bank_name,
-                    account.ifsc_code,
+                    self._safe_text(account.account_number),
+                    self._truncate_text(account.bank_name, 25),
+                    self._safe_text(account.ifsc_code),
                     str(account.total_transactions),
                     f"₹{account.total_amount:,.2f}",
                     f"{account.risk_score:.1f}"

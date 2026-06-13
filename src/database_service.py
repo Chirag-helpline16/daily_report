@@ -106,7 +106,15 @@ class DatabaseService:
     
     def _calculate_ack_count(self, ack_numbers: str) -> int:
         """Calculate ACK count from acknowledgement numbers string."""
-        if not ack_numbers or not ack_numbers.strip():
+        if ack_numbers is None:
+            return 0
+        try:
+            if ack_numbers != ack_numbers:
+                return 0
+        except Exception:
+            pass
+        ack_numbers = str(ack_numbers).strip()
+        if not ack_numbers or ack_numbers.lower() in {"nan", "none", "<na>", "nat"}:
             return 0
         ack_str = ack_numbers.replace(';', ',')
         return len([a.strip() for a in ack_str.split(',') if a.strip()])

@@ -59,6 +59,8 @@ from src.bulk_mysql_import import render_bulk_mysql_import_page
 from src.mysql_database_viewer import render_mysql_database_viewer_page
 from src.ai_sql_assistant import render_ai_sql_assistant_page
 from src.automated_workflow import render_automated_workflow_page
+from src.gujarat_account_formatter import render_gujarat_account_formatter_page
+from src.column_transfer import render_column_transfer_page
 from src.ui_styling import apply_custom_css, render_page_header_with_info
 from src.smart_district_split import render_smart_district_split_page
 from src.ifsc_pincode_district_split import render_ifsc_pincode_district_split_page
@@ -154,6 +156,8 @@ def render_sidebar():
             'ack_list_pivot': '📋 ACK List Pivot',
             'report_generator': '📊 Account & Hold Amount Report Generator',
             'automated_workflow': '🔄 Automated Workflow',
+            'gujarat_account_formatter': 'Gujarat Unique Account Output',
+            'column_transfer': 'Add Columns by Match',
             'column_selector': '📋 Filter Excel File with the Columns You Need',
             'csv_fixer': 'CSV Fixer',
             'excel_merger': '📎 Merge Excel Files',
@@ -194,6 +198,8 @@ def render_sidebar():
             'ack_list_pivot': 'ACK List Pivot',
             'report_generator': 'Account & Hold Report',
             'automated_workflow': 'Automated Workflow',
+            'gujarat_account_formatter': 'Gujarat Unique Account Output',
+            'column_transfer': 'Add Columns by Match',
             'column_selector': 'Column Selector',
             'csv_fixer': 'CSV Fixer',
             'excel_merger': 'Merge Excel Files',
@@ -218,6 +224,8 @@ def render_sidebar():
         top_page_keys = [
             'top_10_suspect',
             'automated_workflow',
+            'gujarat_account_formatter',
+            'column_transfer',
             'daily_report_district_split',
             'csv_fixer',
             'report_generator',
@@ -699,6 +707,23 @@ def render_results_page():
     accounts = st.session_state.aggregated_accounts
     stats = st.session_state.processing_stats
     validation_result = st.session_state.validation_result
+
+    def safe_text(value):
+        if value is None:
+            return ""
+        try:
+            if value != value:
+                return ""
+        except Exception:
+            pass
+        text = str(value).strip()
+        if text.lower() in {"nan", "none", "<na>", "nat"}:
+            return ""
+        return text
+
+    def truncate_text(value, max_length):
+        text = safe_text(value)
+        return text[:max_length] + "..." if len(text) > max_length else text
     
     # Summary Statistics
     st.subheader("📈 Summary Statistics")
@@ -991,14 +1016,14 @@ def render_results_page():
         results_data = []
         for acc in page_accounts:
             results_data.append({
-                "Account Number": acc.account_number,
-                "Bank Name": acc.bank_name,
-                "IFSC Code": acc.ifsc_code,
-                "Address": acc.address[:50] + "..." if len(acc.address) > 50 else acc.address,
-                "District": acc.district,
-                "State": acc.state,
+                "Account Number": safe_text(acc.account_number),
+                "Bank Name": safe_text(acc.bank_name),
+                "IFSC Code": safe_text(acc.ifsc_code),
+                "Address": truncate_text(acc.address, 50),
+                "District": safe_text(acc.district),
+                "State": safe_text(acc.state),
                 "Transactions": acc.total_transactions,
-                "Ack Numbers": acc.acknowledgement_numbers[:30] + "..." if len(acc.acknowledgement_numbers) > 30 else acc.acknowledgement_numbers,
+                "Ack Numbers": truncate_text(acc.acknowledgement_numbers, 30),
                 "Total Amount": f"₹{acc.total_amount:,.2f}",
                 "Disputed Amount": f"₹{acc.total_disputed_amount:,.2f}",
                 "Risk Score": f"{acc.risk_score:.1f}"
@@ -1876,6 +1901,10 @@ def main():
         render_report_generator_page()
     elif page == 'automated_workflow':
         render_automated_workflow_page()
+    elif page == 'gujarat_account_formatter':
+        render_gujarat_account_formatter_page()
+    elif page == 'column_transfer':
+        render_column_transfer_page()
     elif page == 'column_selector':
         render_column_selector_page()
     elif page == 'csv_fixer':
