@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import io
-from datetime import datetime
+from datetime import datetime, timedelta
 import zipfile
 import os
 import json
@@ -718,7 +718,6 @@ def render_automated_workflow_page():
                         st.markdown("#### *Daily Report Summary*")
                         
                         # Get previous day's date
-                        from datetime import timedelta
                         previous_date = (datetime.now() - timedelta(days=1)).strftime("%d.%m.%Y")
                         
                         # Get stats from session state
@@ -844,7 +843,8 @@ def render_automated_workflow_page():
                     # STEP 5: Split by District (4 ZIP files)
                     status_text.text("Step 5/5: Splitting by district and creating ZIP files...")
                     
-                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    # Use the previous day's date for all downloaded file names
+                    timestamp = (datetime.now() - timedelta(days=1)).strftime("%d-%m-%Y")
                     
                     # Store all ZIP files
                     zip_files = {}
