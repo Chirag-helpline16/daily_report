@@ -16,10 +16,10 @@ OUTPUT_COLUMNS = [
     "IFSC CODE",
     "BANK NAME",
     "AC NO",
-    "SUSPECT NAME",
-    "SUSPECT ADDRESS",
-    "SUSPECT MOBILE NUMBER",
-    "SUSPECT LOCATION",
+    "ACCOUNT HOLDER'S NAME",
+    "ACCOUNT HOLDER'S ADDRESS",
+    "ACCOUNT HOLDER'S MOBILE NUMBER",
+    "ACCOUNT HOLDER'S LOCATION",
 ]
 
 SOURCE_FIELDS = {
@@ -120,10 +120,10 @@ def process_gujarat_account_file(
             "IFSC CODE": df[column_mapping["IFSC CODE"]].map(_clean_identifier),
             "BANK NAME": df[column_mapping["BANK NAME"]].map(_clean_text),
             "AC NO": df[column_mapping["AC NO"]].map(_clean_identifier),
-            "SUSPECT NAME": "",
-            "SUSPECT ADDRESS": "",
-            "SUSPECT MOBILE NUMBER": "",
-            "SUSPECT LOCATION": "",
+            "ACCOUNT HOLDER'S NAME": "",
+            "ACCOUNT HOLDER'S ADDRESS": "",
+            "ACCOUNT HOLDER'S MOBILE NUMBER": "",
+            "ACCOUNT HOLDER'S LOCATION": "",
         }
     )
 
